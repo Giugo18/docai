@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: docai
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/docai}
+    username: ${DB_USER:docai}
+    password: ${DB_PASSWORD:docai}
+  jpa:
+    hibernate:
+      ddl-auto: validate          # lo schema lo gestisce Flyway, Hibernate controlla soltanto
+    open-in-view: false
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Validazione delle firme JWT con le chiavi pubbliche di Keycloak
+          jwk-set-uri: ${JWK_SET_URI:http://localhost:8180/realms/docai/protocol/openid-connect/certs}
+
+# ===== Settimana 6+: decommenta e verifica i nomi delle proprietà sulla documentazione di Spring AI 2.0 =====
+#  ai:
+#    ollama:
+#      base-url: ${OLLAMA_URL:http://localhost:11434}
+#      chat:
+#        options:
+#          model: llama3.2
+#      embedding:
+#        options:
+#          model: nomic-embed-text
+#    vectorstore:
+#      pgvector:
+#        initialize-schema: true
+#        dimensions: 768           # dimensione degli embedding di nomic-embed-text
+#        index-type: HNSW
+#        distance-type: COSINE_DISTANCE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

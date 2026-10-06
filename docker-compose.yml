@@ -1,0 +1,60 @@
+# Infrastruttura locale di DocAI.
+# Sviluppo quotidiano:  docker compose up -d postgres keycloak   (l'app la avvii dall'IDE)
+# Dalla settimana 6:    docker compose --profile ai up -d        (aggiunge Ollama)
+# Tutto containerizzato (settimana 5): docker compose --profile ai --profile app up -d --build
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17        # Postgres con l'estensione pgvector già installata
+    container_name: docai-postgres
+    environment:
+      POSTGRES_DB: docai
+      POSTGRES_USER: docai
+      POSTGRES_PASSWORD: docai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docai"]
+      interval: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    container_name: docai-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+
+  ollama:
+    image: ollama/ollama
+    container_name: docai-ollama
+    profiles: ["ai"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+  app:
+    build: ./backend
+    container_name: docai-app
+    profiles: ["app"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/docai
+      JWK_SET_URI: http://keycloak:8080/realms/docai/protocol/openid-connect/certs
+      OLLAMA_URL: http://ollama:11434
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
+  ollama:

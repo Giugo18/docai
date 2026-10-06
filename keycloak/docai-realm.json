@@ -1,0 +1,37 @@
+{
+  "realm": "docai",
+  "enabled": true,
+  "roles": { "realm": [ { "name": "user" }, { "name": "admin" } ] },
+  "clients": [
+    {
+      "clientId": "docai-frontend",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"]
+    }
+  ],
+  "users": [
+    {
+      "username": "mario",
+      "enabled": true,
+      "email": "mario@example.com",
+      "emailVerified": true,
+      "firstName": "Mario",
+      "lastName": "Rossi",
+      "credentials": [ { "type": "password", "value": "mario", "temporary": false } ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "anna",
+      "enabled": true,
+      "email": "anna@example.com",
+      "emailVerified": true,
+      "firstName": "Anna",
+      "lastName": "Bianchi",
+      "credentials": [ { "type": "password", "value": "anna", "temporary": false } ],
+      "realmRoles": ["user", "admin"]
+    }
+  ]
+}
