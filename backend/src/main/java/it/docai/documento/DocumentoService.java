@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DocumentoService {
@@ -17,11 +18,7 @@ public class DocumentoService {
 
     @Transactional
     public DocumentoDto carica(MultipartFile file, String proprietario) {
-        var documento = Documento.nuovo(
-                file.getOriginalFilename(),
-                file.getContentType() != null ? file.getContentType() : "application/octet-stream",
-                file.getSize(),
-                proprietario);
+        var documento = Documento.nuovo(file.getOriginalFilename(), file.getContentType() != null ? file.getContentType() : "application/octet-stream", file.getSize(), proprietario);
         repository.save(documento);
 
         // TODO settimana 8: pipeline di ingestione
@@ -36,9 +33,23 @@ public class DocumentoService {
 
     @Transactional(readOnly = true)
     public List<DocumentoDto> elenca(String proprietario) {
-        return repository.findByProprietarioOrderByCaricatoIlDesc(proprietario)
-                .stream()
-                .map(DocumentoDto::da)
-                .toList();
+        return repository.findByProprietarioOrderByCaricatoIlDesc(proprietario).stream().map(DocumentoDto::da).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public RiepilogoDocumenti riepilogo(String proprietario) {
+        // TODO:
+        var documenti = repository.findByProprietarioOrderByCaricatoIlDesc(proprietario);
+        long totale = documenti.size();
+        long dimensioneTotale = documenti.stream()
+                .mapToLong(Documento::getDimensione)
+                .sum();
+
+        var perStato = documenti.stream().collect(Collectors.groupingBy(
+                Documento::getStato,
+                Collectors.counting()));
+
+        return new RiepilogoDocumenti(totale, dimensioneTotale, perStato);
+
     }
 }

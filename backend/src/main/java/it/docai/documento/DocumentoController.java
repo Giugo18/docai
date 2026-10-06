@@ -31,4 +31,9 @@ public class DocumentoController {
         //      un errore ProblemDetail tramite un @RestControllerAdvice
         return service.carica(file, jwt.getSubject());
     }
+
+    @GetMapping("/riepilogo")
+    public RiepilogoDocumenti riepilogo(@AuthenticationPrincipal Jwt jwt){
+        return service.riepilogo(jwt.getSubject());
+    }
 }
