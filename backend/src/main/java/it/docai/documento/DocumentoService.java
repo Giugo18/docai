@@ -39,7 +39,8 @@ public class DocumentoService {
     @Transactional(readOnly = true)
     public RiepilogoDocumenti riepilogo(String proprietario) {
         // TODO:
-        var documenti = repository.findByProprietarioOrderByCaricatoIlDesc(proprietario);
+
+        /*var documenti = repository.findByProprietarioOrderByCaricatoIlDesc(proprietario);
         long totale = documenti.size();
         long dimensioneTotale = documenti.stream()
                 .mapToLong(Documento::getDimensione)
@@ -48,6 +49,21 @@ public class DocumentoService {
         var perStato = documenti.stream().collect(Collectors.groupingBy(
                 Documento::getStato,
                 Collectors.counting()));
+
+        return new RiepilogoDocumenti(totale, dimensioneTotale, perStato);*/
+
+        var righe = repository.riepilogoPerStato(proprietario);
+
+        long totale = righe.stream()
+                .mapToLong(RigaRiepilogo::getNumero)
+                .sum();
+        long dimensioneTotale = righe.stream()
+                .mapToLong(RigaRiepilogo::getDimensione)
+                .sum();
+        var perStato = righe.stream()
+                .collect(Collectors.toMap(
+                        r -> StatoDocumento.valueOf(r.getStato()),
+                        RigaRiepilogo::getNumero));
 
         return new RiepilogoDocumenti(totale, dimensioneTotale, perStato);
 
