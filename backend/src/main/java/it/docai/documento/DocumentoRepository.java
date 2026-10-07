@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
@@ -19,4 +20,6 @@ public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
         GROUP BY stato
         """, nativeQuery = true)
     List<RigaRiepilogo> riepilogoPerStato(String proprietario);
+
+    Optional<Documento> findByIdAndProprietario(UUID id, String proprietario);
 }

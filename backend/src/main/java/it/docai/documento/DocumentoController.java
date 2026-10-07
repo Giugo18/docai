@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/documenti")
@@ -48,5 +49,10 @@ public class DocumentoController {
 
     private ResponseEntity<ProblemDetail> errore(HttpStatus stato, String dettaglio) {
         return ResponseEntity.status(stato).body(ProblemDetail.forStatusAndDetail(stato, dettaglio));
+    }
+
+    @GetMapping("/{id}")
+    public DocumentoDto trova(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        return service.trova(id, jwt.getSubject());
     }
 }

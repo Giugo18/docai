@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,5 +68,13 @@ public class DocumentoService {
 
         return new RiepilogoDocumenti(totale, dimensioneTotale, perStato);
 
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentoDto trova(UUID id, String proprietario) {
+        // TODO: findByIdAndProprietario → map(DocumentoDto::da) → orElseThrow(...)
+        return repository.findByIdAndProprietario(id, proprietario)   // Optional<Documento>
+                .map(DocumentoDto::da)                                // Optional<DocumentoDto>
+                .orElseThrow(() -> new DocumentoNonTrovatoException(id));
     }
 }
