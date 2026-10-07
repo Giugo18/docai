@@ -12,13 +12,19 @@ import java.util.stream.Collectors;
 public class DocumentoService {
 
     private final DocumentoRepository repository;
+    private final ValidatoreUpload validatoreUpload;
 
-    public DocumentoService(DocumentoRepository repository) {
+    public DocumentoService(DocumentoRepository repository, ValidatoreUpload validatoreUpload) {
         this.repository = repository;
+        this.validatoreUpload = validatoreUpload;
     }
 
     @Transactional
     public DocumentoDto carica(MultipartFile file, String proprietario) {
+
+        validatoreUpload.valida(file).ifPresent(errore -> {
+            throw new UploadNonValidoException(errore);
+        });
         var documento = Documento.nuovo(file.getOriginalFilename(), file.getContentType() != null ? file.getContentType() : "application/octet-stream", file.getSize(), proprietario);
         repository.save(documento);
 
