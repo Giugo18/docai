@@ -38,9 +38,15 @@ spring:
 #        dimensions: 768           # dimensione degli embedding di nomic-embed-text
 #        index-type: HNSW
 #        distance-type: COSINE_DISTANCE
-
+  threads:
+    virtual:
+      enabled: true
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+#server:
+  #tomcat:
+    #threads:
+      #max: 10
