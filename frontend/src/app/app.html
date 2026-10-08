@@ -1,3 +1,8 @@
 <h1>DocAI</h1>
 <p>Ciao {{ nomeUtente }}</p>
 <button (click)="esci()">Esci</button>
+<button (click)="caricaRiepilogo()">Carica riepilogo</button>
+
+@if (riepilogo()) {
+  <pre>{{ riepilogo() | json }}</pre>
+}
