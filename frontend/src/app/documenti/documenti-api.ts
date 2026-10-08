@@ -31,4 +31,8 @@ export class DocumentiApi {
   trova(id: string) {
     return this.http.get<DocumentoDto>(`/api/documenti/${id}`);
   }
+
+  rinomina(id: string, nomeFile: string) {
+    return this.http.patch<DocumentoDto>(`/api/documenti/${id}`, { nomeFile });
+}
 }

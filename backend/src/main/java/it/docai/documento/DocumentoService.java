@@ -83,4 +83,18 @@ public class DocumentoService {
                 .map(DocumentoDto::da)                                // Optional<DocumentoDto>
                 .orElseThrow(() -> new DocumentoNonTrovatoException(id));
     }
+
+
+    /*
+    Non serve repository.save(...). Dentro @Transactional l’entità è “managed” e JPA,
+    al commit, si accorge da solo della modifica e fa l’UPDATE (si chiama dirty checking).
+    Il findByIdAndProprietario mantiene la protezione IDOR: anna non può rinominare i documenti di mario, e riceve 404.
+     */
+    @Transactional
+    public DocumentoDto rinomina(UUID id, String nuovoNome, String proprietario) {
+        Documento documento = repository.findByIdAndProprietario(id, proprietario)
+                .orElseThrow(() -> new DocumentoNonTrovatoException(id));
+        documento.rinomina(nuovoNome);
+        return DocumentoDto.da(documento);
+    }
 }

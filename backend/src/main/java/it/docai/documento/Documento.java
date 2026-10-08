@@ -57,4 +57,8 @@ public class Documento {
     public String getProprietario()   { return proprietario; }
     public StatoDocumento getStato()  { return stato; }
     public Instant getCaricatoIl()    { return caricatoIl; }
+
+    public void rinomina(String nuovoNome) {
+        this.nomeFile = nuovoNome;
+    }
 }

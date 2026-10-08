@@ -1,5 +1,6 @@
 package it.docai.documento;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,5 +41,12 @@ public class DocumentoController {
     @GetMapping("/{id}")
     public DocumentoDto trova(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         return service.trova(id, jwt.getSubject());
+    }
+
+    @PatchMapping("/{id}")
+    public DocumentoDto rinomina(@PathVariable UUID id,
+                                 @Valid @RequestBody RinominaDocumento richiesta,
+                                 @AuthenticationPrincipal Jwt jwt) {
+        return service.rinomina(id, richiesta.nomeFile(), jwt.getSubject());
     }
 }
