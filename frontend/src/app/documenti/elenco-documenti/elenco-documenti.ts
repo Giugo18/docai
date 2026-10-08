@@ -1,9 +1,10 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { DocumentiApi } from '../documenti-api';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [[DatePipe, DecimalPipe]],
+  imports: [DatePipe, DecimalPipe, RouterLink],
   selector: 'app-elenco-documenti',
   styleUrl: './elenco-documenti.scss',
   templateUrl: './elenco-documenti.html',
@@ -13,7 +14,4 @@ export class ElencoDocumenti {
 
   protected readonly documenti = this.api.documenti;;
 
-  constructor() {
-    this.api.aggiorna();   // carica la lista quando il componente nasce
-  }
 }

@@ -1,0 +1,15 @@
+<a routerLink="/documenti">← Torna ai documenti</a>
+
+@if (documento(); as d) {
+  <h2>{{ d.nomeFile }}</h2>
+  <dl>
+    <dt>Dimensione</dt>  <dd>{{ d.dimensione / 1024 / 1024 | number: '1.1-1' }} MB</dd>
+    <dt>Stato</dt>       <dd>{{ d.stato }}</dd>
+    <dt>Caricato il</dt> <dd>{{ d.caricatoIl | date: 'dd/MM/yyyy HH:mm' }}</dd>
+    <dt>ID</dt>          <dd>{{ d.id }}</dd>
+  </dl>
+} @else if (nonTrovato()) {
+  <p>Documento non trovato.</p>
+} @else {
+  <p>Caricamento…</p>
+}

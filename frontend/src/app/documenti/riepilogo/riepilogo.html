@@ -1,0 +1,9 @@
+@if (riepilogo(); as r) {
+  <p>
+    <strong>{{ r.totale }}</strong> documenti ·
+    {{ r.dimensioneTotale / 1024 / 1024 | number: '1.1-1' }} MB
+    @for (voce of r.perStato | keyvalue; track voce.key) {
+      · {{ voce.key }}: {{ voce.value }}
+    }
+  </p>
+}

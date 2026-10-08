@@ -15,7 +15,7 @@
     <tbody>
       @for (d of documenti(); track d.id) {
         <tr>
-          <td>{{ d.nomeFile }}</td>
+          <td><a [routerLink]="['/documenti', d.id]">{{ d.nomeFile }}</a></td>
           <td>{{ d.dimensione / 1024 / 1024 | number: '1.1-1' }} MB</td>
           <td>{{ d.stato }}</td>
           <td>{{ d.caricatoIl | date: 'dd/MM/yyyy HH:mm' }}</td>

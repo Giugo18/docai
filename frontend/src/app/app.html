@@ -1,11 +1,9 @@
-<h1>DocAI</h1>
-<p>Ciao {{ nomeUtente }}</p>
-<button (click)="esci()">Esci</button>
-<button (click)="caricaRiepilogo()">Carica riepilogo</button>
+<header>
+  <h1>DocAI</h1>
+  <span>Ciao {{ nomeUtente }}</span>
+  <button (click)="esci()">Esci</button>
+</header>
 
-@if (riepilogo()) {
-  <pre>{{ riepilogo() | json }}</pre>
-}
-
-<app-carica-documento />
-<app-elenco-documenti />
+<main>
+  <router-outlet />
+</main>
