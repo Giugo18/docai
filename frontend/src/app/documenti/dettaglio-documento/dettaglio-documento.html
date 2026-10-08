@@ -10,6 +10,8 @@
   </dl>
 } @else if (nonTrovato()) {
   <p>Documento non trovato.</p>
-} @else {
+} @else if (errore()) {
+  <p class="errore">{{ errore() }}</p>
+} @else  {
   <p>Caricamento…</p>
 }

@@ -6,6 +6,7 @@
 @if (inCaricamento()) {
   <p>Caricamento in corso…</p>
 }
+
 @if (messaggio()) {
-  <p>{{ messaggio() }}</p>
+  <p [class]="esito()">{{ messaggio() }}</p>
 }
