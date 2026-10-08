@@ -1,6 +1,12 @@
 {
   "realm": "docai",
   "enabled": true,
+  "displayName": "DocAI",
+  "displayNameHtml": "DocAI",
+  "loginTheme": "docai",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["it", "en"],
+  "defaultLocale": "it",
   "roles": { "realm": [ { "name": "user" }, { "name": "admin" } ] },
   "clients": [
     {
@@ -11,13 +17,14 @@
       "redirectUris": ["http://localhost:4200/*"],
       "webOrigins": ["http://localhost:4200"],
       "attributes": {
-        "post.logout.redirect.uris": "+",
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
       }
     }
   ],
   "users": [
     {
+      "id": "cb9671bd-8357-49d2-97af-3219b37496bc",
       "username": "mario",
       "enabled": true,
       "email": "mario@example.com",
@@ -28,6 +35,7 @@
       "realmRoles": ["user"]
     },
     {
+      "id": "e7f25cff-3ca7-4f89-96f2-9736714158bc",
       "username": "anna",
       "enabled": true,
       "email": "anna@example.com",

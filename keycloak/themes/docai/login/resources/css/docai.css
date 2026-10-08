@@ -1,0 +1,35 @@
+:root {
+  /* colore principale di PatternFly = blue-600 / blue-700 di Tailwind */
+  --pf-v5-global--primary-color--100: #2563eb;
+  --pf-v5-global--primary-color--200: #1d4ed8;
+  --pf-v5-global--link--Color: #2563eb;
+  --pf-v5-global--link--Color--hover: #1d4ed8;
+  --keycloak-card-top-color: #2563eb;
+  --keycloak-bg-logo-url: none;            /* via lo sfondo con il logo Keycloak */
+}
+
+.login-pf body {
+  background: #f8fafc;                     /* slate-50, come l'app */
+}
+
+#kc-header-wrapper {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 800;
+  font-size: 2.25rem;
+  color: #2563eb !important;
+}
+
+.pf-v5-c-login__main {                     /* la scheda del form */
+  border: 1px solid #e2e8f0;               /* slate-200 */
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.pf-v5-c-button {
+  border-radius: 8px;
+}
+
+.pf-v5-c-form-control {
+  overflow: hidden;
+}
