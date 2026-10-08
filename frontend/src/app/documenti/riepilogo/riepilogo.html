@@ -1,9 +1,20 @@
 @if (riepilogo(); as r) {
-  <p>
-    <strong>{{ r.totale }}</strong> documenti ·
-    {{ r.dimensioneTotale / 1024 / 1024 | number: '1.1-1' }} MB
+  <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-4">
+      <p class="text-sm text-slate-500">{{ r.totale === 1 ? 'Documento' : 'Documenti' }}</p>
+      <p class="mt-1 text-2xl font-semibold">{{ r.totale }}</p>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-4">
+      <p class="text-sm text-slate-500">Spazio usato</p>
+      <p class="mt-1 text-2xl font-semibold">{{ r.dimensioneTotale / 1048576 | number: '1.1-1' }} MB</p>
+    </div>
+
     @for (voce of r.perStato | keyvalue; track voce.key) {
-      · {{ voce.key }}: {{ voce.value }}
+      <div class="rounded-xl border border-slate-200 bg-white p-4">
+        <p class="text-sm text-slate-500">{{ voce.key }}</p>
+        <p class="mt-1 text-2xl font-semibold">{{ voce.value }}</p>
+      </div>
     }
-  </p>
+  </section>
 }

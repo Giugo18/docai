@@ -1,6 +1,6 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { DocumentiApi } from '../documenti-api';
-import { DocumentoDto } from '../documento';
+import { COLORI_STATO, DocumentoDto } from '../documento';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { messaggioErrore } from '../../errori/problem-detail';
@@ -20,6 +20,7 @@ export class DettaglioDocumento {
   protected readonly nonTrovato = signal(false);
 
   protected readonly errore = signal('');
+  readonly coloriStato = COLORI_STATO; 
 
   ngOnInit() {
     this.api.trova(this.id()).subscribe({

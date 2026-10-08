@@ -2,6 +2,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { DocumentiApi } from '../documenti-api';
 import { RouterLink } from '@angular/router';
+import { COLORI_STATO, DocumentoDto } from '../documento';
 
 @Component({
   imports: [DatePipe, DecimalPipe, RouterLink],
@@ -10,8 +11,11 @@ import { RouterLink } from '@angular/router';
   templateUrl: './elenco-documenti.html',
 })
 export class ElencoDocumenti {
-   private readonly api = inject(DocumentiApi);
 
-  protected readonly documenti = this.api.documenti;;
+   
+private readonly api = inject(DocumentiApi);
+
+protected readonly documenti = this.api.documenti;
+readonly coloriStato = COLORI_STATO   // import { COLORI_STATO } from '../documento';
 
 }
