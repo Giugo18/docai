@@ -5,9 +5,10 @@ import { RouterOutlet } from '@angular/router';
 import Keycloak from 'keycloak-js';
 import { ElencoDocumenti } from './documenti/elenco-documenti/elenco-documenti';
 import { DocumentiApi } from './documenti/documenti-api';
+import { CaricaDocumento } from './documenti/carica-documento/carica-documento';
 
 @Component({
-  imports: [RouterOutlet, JsonPipe, ElencoDocumenti],
+  imports: [RouterOutlet, JsonPipe, ElencoDocumenti, CaricaDocumento],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',

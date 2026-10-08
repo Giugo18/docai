@@ -1,0 +1,11 @@
+<h2>Carica un documento</h2>
+
+<input type="file" accept="application/pdf" (change)="scegli($event)" />
+<button (click)="invia()" [disabled]="!file() || inCaricamento()">Carica</button>
+
+@if (inCaricamento()) {
+  <p>Caricamento in corso…</p>
+}
+@if (messaggio()) {
+  <p>{{ messaggio() }}</p>
+}

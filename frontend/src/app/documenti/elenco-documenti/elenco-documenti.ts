@@ -1,7 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { DocumentiApi } from '../documenti-api';
-import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   imports: [[DatePipe, DecimalPipe]],
@@ -12,5 +11,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 export class ElencoDocumenti {
    private readonly api = inject(DocumentiApi);
 
-  protected readonly documenti = toSignal(this.api.elenca(), { initialValue: [] });
+  protected readonly documenti = this.api.documenti;;
+
+  constructor() {
+    this.api.aggiorna();   // carica la lista quando il componente nasce
+  }
 }
