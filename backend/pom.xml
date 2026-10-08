@@ -96,10 +96,15 @@
         </dependency>
         -->
 
-        <!-- ===== Test (settimana 3: Testcontainers) ===== -->
+        <!-- ===== Test (settimana 3: MockMvc, Security Test, Testcontainers) ===== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
