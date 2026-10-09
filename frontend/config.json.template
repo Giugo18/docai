@@ -1,0 +1,3 @@
+{
+  "keycloakUrl": "${KEYCLOAK_URL}"
+}

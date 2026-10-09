@@ -88,6 +88,9 @@ services:
         condition: service_healthy
     ports:
       - "8081:80"
+    environment:
+      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      NGINX_ENVSUBST_OUTPUT_DIR: /usr/share/nginx/html   # il template genera config.json nella cartella del sito
 
 volumes:
   pgdata:

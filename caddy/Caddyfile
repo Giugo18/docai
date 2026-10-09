@@ -1,0 +1,10 @@
+# Il sito: tutto al frontend (nginx passa /api al backend)
+{$DOMINIO} {
+	encode zstd gzip
+	reverse_proxy frontend:80
+}
+
+# Keycloak su un sottodominio
+auth.{$DOMINIO} {
+	reverse_proxy keycloak:8080
+}

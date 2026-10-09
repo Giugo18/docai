@@ -1,0 +1,44 @@
+# Produzione: si somma a docker-compose.yml
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app up -d --build
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: docai-caddy
+    profiles: ["app"]
+    depends_on:
+      - frontend
+      - keycloak
+    environment:
+      DOMINIO: ${DOMINIO:?manca DOMINIO nel file .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data          # certificati: se si perdono, Caddy li richiede di nuovo
+      - caddy_config:/config
+    restart: unless-stopped
+
+  # da Internet si entra solo da Caddy: niente porte per gli altri servizi
+  postgres:
+    ports: !reset []
+    restart: unless-stopped
+
+  keycloak:
+    ports: !reset []
+    environment:
+      KC_PROXY_HEADERS: xforwarded   # fidati degli header X-Forwarded-* mandati da Caddy
+    restart: unless-stopped
+
+  app:
+    ports: !reset []
+    restart: unless-stopped
+
+  frontend:
+    ports: !reset []
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

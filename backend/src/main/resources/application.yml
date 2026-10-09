@@ -48,7 +48,8 @@ management:
     web:
       exposure:
         include: health,info
-#server:
+server:
+  forward-headers-strategy: framework   # usa X-Forwarded-Proto/Host: siamo dietro a nginx e Caddy
   #tomcat:
     #threads:
       #max: 10

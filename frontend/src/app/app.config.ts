@@ -10,6 +10,7 @@ import {
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
 } from 'keycloak-angular';
 
+
 /** Configurazione letta da /config.json all'avvio: cambia per ambiente, l'immagine resta la stessa */
 export interface ConfigApp {
   keycloakUrl: string;
@@ -35,6 +36,7 @@ export function creaAppConfig(config: ConfigApp): ApplicationConfig {
         initOptions: {
           onLoad: 'login-required',   // senza utente → redirect subito al login di Keycloak
           pkceMethod: 'S256',         // PKCE con SHA-256
+          checkLoginIframe: false,    // niente iframe di controllo sessione: i browser bloccano i cookie di terze parti
         },
       }),
       provideHttpClient(withInterceptors([includeBearerTokenInterceptor])),
