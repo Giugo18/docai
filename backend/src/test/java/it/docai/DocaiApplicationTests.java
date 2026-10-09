@@ -3,8 +3,8 @@ package it.docai;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -14,16 +14,15 @@ import org.testcontainers.utility.DockerImageName;
  * non coincidono, il test fallisce.
  */
 @SpringBootTest
-@Testcontainers
+@Import(TestcontainersConfiguration.class)
 class DocaiApplicationTests {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer(
-            DockerImageName.parse("pgvector/pgvector:pg17").asCompatibleSubstituteFor("postgres"));
 
     @Test
     void contestoSiAvvia() {
         // TODO settimana 3: aggiungi test sul repository e, con MockMvc + jwt(), sul controller
+    }
+
+    @Test
+    void contextLoads() {
     }
 }
