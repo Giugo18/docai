@@ -49,12 +49,25 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/docai
+      # i token li chiede il browser a localhost:8180: questo è il loro "iss"
+      ISSUER_URI: http://localhost:8180/realms/docai
+      # le chiavi invece il backend le scarica dentro la rete Docker
       JWK_SET_URI: http://keycloak:8080/realms/docai/protocol/openid-connect/certs
-      OLLAMA_URL: http://ollama:11434
     ports:
-      - "8080:8080"
+      - "8080:8080"   # comodo per le prove da PowerShell; online non sarà esposto
+
+  frontend:
+    build: ./frontend
+    container_name: docai-frontend
+    profiles: ["app"]
+    depends_on:
+      - app
+    ports:
+      - "8081:80"
 
 volumes:
   pgdata:
