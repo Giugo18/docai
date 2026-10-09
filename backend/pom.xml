@@ -38,7 +38,7 @@
         <!-- ===== Settimana 2: web e validazione ===== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -71,7 +71,7 @@
         <!-- ===== Settimana 4: sicurezza (JWT emessi da Keycloak) ===== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
 
         <!-- ===== Settimana 6: decommenta per attivare Spring AI con Ollama =====

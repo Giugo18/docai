@@ -11,7 +11,6 @@ public class TestcontainersConfiguration {
     @Bean
     @ServiceConnection
     PostgreSQLContainer postgres() {
-        new Exception("### postgres() chiamato").printStackTrace();   // TEMPORANEO
         return new PostgreSQLContainer(
                 DockerImageName.parse("pgvector/pgvector:pg17").asCompatibleSubstituteFor("postgres"));
     }
