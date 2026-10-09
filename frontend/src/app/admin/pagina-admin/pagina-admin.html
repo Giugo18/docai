@@ -1,0 +1,28 @@
+<section class="rounded-xl border border-slate-200 bg-white">
+  <h2 class="px-4 pt-4 text-lg font-semibold">Statistiche per utente</h2>
+
+  @if (righe(); as righe) {
+    <table class="mt-2 w-full text-left text-sm">
+      <thead class="border-b border-slate-200 text-slate-500">
+        <tr>
+          <th class="px-4 py-3 font-medium">Utente (ID Keycloak)</th>
+          <th class="px-4 py-3 text-right font-medium">Documenti</th>
+          <th class="px-4 py-3 text-right font-medium">Spazio</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @for (r of righe; track r.proprietario) {
+          <tr>
+            <td class="break-all px-4 py-3 font-mono text-xs text-slate-700">{{ r.proprietario }}</td>
+            <td class="px-4 py-3 text-right tabular-nums">{{ r.documenti }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ r.dimensione / 1048576 | number: '1.1-1' }} MB</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else if (errore()) {
+    <p class="m-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ errore() }}</p>
+  } @else {
+    <p class="p-4 text-sm text-slate-500">Caricamento…</p>
+  }
+</section>

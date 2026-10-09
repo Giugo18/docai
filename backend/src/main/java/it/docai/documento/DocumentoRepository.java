@@ -22,4 +22,14 @@ public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
     List<RigaRiepilogo> riepilogoPerStato(String proprietario);
 
     Optional<Documento> findByIdAndProprietario(UUID id, String proprietario);
+
+    @Query("""
+        SELECT d.proprietario AS proprietario,
+               COUNT(d)       AS documenti,
+               SUM(d.dimensione) AS dimensione
+        FROM Documento d
+        GROUP BY d.proprietario
+        ORDER BY COUNT(d) DESC
+        """)
+    List<RigaStatistica> statistichePerProprietario();
 }

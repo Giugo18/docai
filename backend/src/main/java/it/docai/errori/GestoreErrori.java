@@ -6,6 +6,7 @@ import it.docai.documento.UploadNonValidoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -71,5 +72,14 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         problema.setProperty("errori", errori);
 
         return handleExceptionInternal(ex, problema, headers, status, request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail accessoNegato(AccessDeniedException ex) {
+        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+                "Non hai i permessi per questa operazione");
+        problema.setTitle("Accesso negato");
+        problema.setType(URI.create("https://docai.it/errori/accesso-negato"));
+        return problema;
     }
 }

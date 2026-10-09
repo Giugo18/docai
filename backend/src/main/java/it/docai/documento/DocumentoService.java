@@ -97,4 +97,9 @@ public class DocumentoService {
         documento.rinomina(nuovoNome);
         return DocumentoDto.da(documento);
     }
+
+    @Transactional(readOnly = true)
+    public List<RigaStatistica> statistiche() {
+        return repository.statistichePerProprietario();
+    }
 }

@@ -19,6 +19,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
+          # chi deve aver emesso il token (claim "iss")
+          issuer-uri: ${ISSUER_URI:http://localhost:8180/realms/docai}
           # Validazione delle firme JWT con le chiavi pubbliche di Keycloak
           jwk-set-uri: ${JWK_SET_URI:http://localhost:8180/realms/docai/protocol/openid-connect/certs}
 
