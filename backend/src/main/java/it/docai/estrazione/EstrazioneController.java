@@ -33,13 +33,13 @@ public class EstrazioneController {
 
 
 
-    @PostMapping("/fattura")
+    /*@PostMapping("/fattura")
     public Fattura estraiFattura(@Valid @RequestBody TestoDaEstrarre richiesta) {
         return chatClient.prompt()
                 .user(richiesta.testo())
                 .call()
                 .entity(Fattura.class);   // invece di content(): JSON → record
-    }
+    }*/
 
 
     /** Utile per capire cosa "vede" il modello: il testo grezzo del PDF */
@@ -49,7 +49,12 @@ public class EstrazioneController {
     }
 
     @PostMapping("/documenti/{id}/fattura")
-    public Fattura daDocumento(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+    public EsitoEstrazione  daDocumento(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         return service.daDocumento(id, jwt.getSubject());
+    }
+
+    @PostMapping("/fattura")
+    public EsitoEstrazione daTesto(@Valid @RequestBody TestoDaEstrarre richiesta) {
+        return service.daTesto(richiesta.testo());
     }
 }
