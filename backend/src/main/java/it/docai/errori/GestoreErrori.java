@@ -3,6 +3,8 @@ package it.docai.errori;
 import it.docai.documento.DocumentoNonTrovatoException;
 import it.docai.documento.ErroreUpload;
 import it.docai.documento.UploadNonValidoException;
+import it.docai.estrazione.ContenutoNonDisponibileException;
+import it.docai.estrazione.TestoNonEstraibileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
@@ -80,6 +82,22 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
                 "Non hai i permessi per questa operazione");
         problema.setTitle("Accesso negato");
         problema.setType(URI.create("https://docai.it/errori/accesso-negato"));
+        return problema;
+    }
+
+    @ExceptionHandler(ContenutoNonDisponibileException.class)
+    ProblemDetail contenutoNonDisponibile(ContenutoNonDisponibileException e) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        problema.setTitle("Contenuto non disponibile");
+        problema.setType(URI.create("https://docai.it/errori/contenuto-non-disponibile"));
+        return problema;
+    }
+
+    @ExceptionHandler(TestoNonEstraibileException.class)
+    ProblemDetail testoNonEstraibile(TestoNonEstraibileException e) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        problema.setTitle("Testo non estraibile");
+        problema.setType(URI.create("https://docai.it/errori/testo-non-estraibile"));
         return problema;
     }
 }

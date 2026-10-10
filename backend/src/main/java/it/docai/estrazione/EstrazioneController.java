@@ -2,11 +2,24 @@ package it.docai.estrazione;
 
 import jakarta.validation.Valid;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/estrazione")
 public class EstrazioneController {
+
+    private final EstrazioneService service;
+    private final ChatClient chatClient;
+
+    public EstrazioneController(ChatClient.Builder builder, EstrazioneService service) {
+        // un ChatClient diverso da quello della chat: altro compito, altre istruzioni
+        this.chatClient = builder.defaultSystem(ISTRUZIONI).build();
+        this.service = service;
+    }
 
     private static final String ISTRUZIONI = """
             Sei un estrattore di dati da fatture italiane.
@@ -16,12 +29,9 @@ public class EstrazioneController {
             Le date sono nel formato AAAA-MM-GG; nel testo sono in formato italiano GG/MM/AAAA.
             """;
 
-    private final ChatClient chatClient;
 
-    public EstrazioneController(ChatClient.Builder builder) {
-        // un ChatClient diverso da quello della chat: altro compito, altre istruzioni
-        this.chatClient = builder.defaultSystem(ISTRUZIONI).build();
-    }
+
+
 
     @PostMapping("/fattura")
     public Fattura estraiFattura(@Valid @RequestBody TestoDaEstrarre richiesta) {
@@ -29,5 +39,17 @@ public class EstrazioneController {
                 .user(richiesta.testo())
                 .call()
                 .entity(Fattura.class);   // invece di content(): JSON → record
+    }
+
+
+    /** Utile per capire cosa "vede" il modello: il testo grezzo del PDF */
+    @GetMapping(value = "/documenti/{id}/testo", produces = "text/plain;charset=UTF-8")
+    public String testo(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        return service.testoDelDocumento(id, jwt.getSubject());
+    }
+
+    @PostMapping("/documenti/{id}/fattura")
+    public Fattura daDocumento(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        return service.daDocumento(id, jwt.getSubject());
     }
 }

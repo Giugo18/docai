@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -13,10 +15,12 @@ public class DocumentoService {
 
     private final DocumentoRepository repository;
     private final ValidatoreUpload validatoreUpload;
+    private final ContenutoDocumentoRepository contenutoRepository;
 
-    public DocumentoService(DocumentoRepository repository, ValidatoreUpload validatoreUpload) {
+    public DocumentoService(DocumentoRepository repository, ValidatoreUpload validatoreUpload, ContenutoDocumentoRepository contenutoDocumentoRepository) {
         this.repository = repository;
         this.validatoreUpload = validatoreUpload;
+        this.contenutoRepository = contenutoDocumentoRepository;
     }
 
     @Transactional
@@ -27,6 +31,11 @@ public class DocumentoService {
         });
         var documento = Documento.nuovo(file.getOriginalFilename(), file.getContentType() != null ? file.getContentType() : "application/octet-stream", file.getSize(), proprietario);
         repository.save(documento);
+        try {
+            contenutoRepository.save(new ContenutoDocumento(documento.getId(), file.getBytes()));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Impossibile leggere il file caricato", e);
+        }
 
         // TODO settimana 8: pipeline di ingestione
         //   1. leggi il contenuto con TikaDocumentReader
