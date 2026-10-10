@@ -5,4 +5,5 @@ public sealed interface ErroreUpload {
     record FileVuoto() implements ErroreUpload {}
     record TipoNonAmmesso(String contentType) implements ErroreUpload {}
     record TroppoGrande(long dimensione, long massimo) implements ErroreUpload {}
+    record NonUnPdf() implements ErroreUpload { }
 }

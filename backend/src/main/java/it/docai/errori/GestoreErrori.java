@@ -53,6 +53,9 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
             case ErroreUpload.TroppoGrande(var dimensione, var massimo) ->
                     ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE,
                             "File di %.1f MB, il massimo è %d MB".formatted(dimensione / 1024.0 / 1024, massimo / 1024 / 1024));
+            case ErroreUpload.NonUnPdf() ->
+                    ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                            "Il file non è un PDF valido");
         };
     }
 
