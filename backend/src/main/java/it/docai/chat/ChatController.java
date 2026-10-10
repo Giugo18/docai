@@ -14,11 +14,9 @@ public class ChatController {
 
     private final ChatClient chatClient;
 
-    // Spring Boot crea il Builder già configurato per Ollama (base-url e modello da application.yml)
-    public ChatController(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
+    public ChatController(ChatClient chatClient) {
+        this.chatClient = chatClient;
     }
-
 
     @PostMapping
     public RispostaChat chiedi(@Valid @RequestBody DomandaChat richiesta) {
