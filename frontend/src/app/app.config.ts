@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -9,6 +9,8 @@ import {
   IncludeBearerTokenCondition,
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
 } from 'keycloak-angular';
+import { registerLocaleData } from '@angular/common';
+import localeIt from '@angular/common/locales/it';
 
 
 /** Configurazione letta da /config.json all'avvio: cambia per ambiente, l'immagine resta la stessa */
@@ -22,9 +24,12 @@ const soloApi = createInterceptorCondition<IncludeBearerTokenCondition>({
   bearerPrefix: 'Bearer',
 });
 
+registerLocaleData(localeIt); 
+
 export function creaAppConfig(config: ConfigApp): ApplicationConfig {
   return {
     providers: [
+      { provide: LOCALE_ID, useValue: 'it' },
       provideBrowserGlobalErrorListeners(),
       provideRouter(routes, withComponentInputBinding()),
       provideKeycloak({

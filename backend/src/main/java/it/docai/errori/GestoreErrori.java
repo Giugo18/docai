@@ -4,6 +4,7 @@ import it.docai.documento.DocumentoNonTrovatoException;
 import it.docai.documento.ErroreUpload;
 import it.docai.documento.UploadNonValidoException;
 import it.docai.estrazione.ContenutoNonDisponibileException;
+import it.docai.estrazione.DocumentoTroppoLungoException;
 import it.docai.estrazione.TestoNonEstraibileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +102,14 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         problema.setTitle("Testo non estraibile");
         problema.setType(URI.create("https://docai.it/errori/testo-non-estraibile"));
+        return problema;
+    }
+
+    @ExceptionHandler(DocumentoTroppoLungoException.class)
+    ProblemDetail documentoTroppoLungo(DocumentoTroppoLungoException e) {
+        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        problema.setTitle("Documento troppo lungo");
+        problema.setType(URI.create("https://docai.it/errori/documento-troppo-lungo"));
         return problema;
     }
 }

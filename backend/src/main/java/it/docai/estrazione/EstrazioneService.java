@@ -30,6 +30,7 @@ public class EstrazioneService {
     private final VerificaFattura verifica;
     private static final Logger log = LoggerFactory.getLogger(EstrazioneService.class);
     private static final int TENTATIVI_MASSIMI = 2;
+    static final int CARATTERI_MASSIMI = 20_000;
 
     public EstrazioneService(ChatClient.Builder builder,
                              DocumentoRepository documentoRepository,
@@ -66,6 +67,9 @@ public class EstrazioneService {
         String testo = testoPdf.estrai(contenuto.getDati());
         if (testo.isBlank()) {
             throw new TestoNonEstraibileException("Il PDF non contiene testo selezionabile: forse è una scansione");
+        }
+        if (testo.length() > CARATTERI_MASSIMI) {
+            throw new DocumentoTroppoLungoException(testo.length(), CARATTERI_MASSIMI);
         }
         return testo;
     }

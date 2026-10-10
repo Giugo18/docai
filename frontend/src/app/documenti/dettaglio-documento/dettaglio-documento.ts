@@ -4,9 +4,10 @@ import { COLORI_STATO, DocumentoDto } from '../documento';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { messaggioErrore } from '../../errori/problem-detail';
+import { EstrazioneFattura } from '../../estrazione/estrazione-fattura/estrazione-fattura';
 
 @Component({
-  imports: [RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DatePipe, DecimalPipe, EstrazioneFattura],
   selector: 'app-dettaglio-documento',
   styleUrl: './dettaglio-documento.scss',
   templateUrl: './dettaglio-documento.html',
