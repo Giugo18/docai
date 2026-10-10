@@ -30,6 +30,14 @@ spring:
       base-url: ${OLLAMA_URL:http://localhost:11434}
       chat:
         model: llama3.2
+      embedding:
+        model: bge-m3
+    vectorstore:
+      pgvector:
+        initialize-schema: false      # la tabella la crea Flyway
+        dimensions: 768
+        distance-type: COSINE_DISTANCE
+        index-type: HNSW
 #          model: llama3.2
 #      embedding:
 #        options:
