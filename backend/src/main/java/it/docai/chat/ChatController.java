@@ -3,10 +3,12 @@ package it.docai.chat;
 import jakarta.validation.Valid;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -41,5 +43,14 @@ public class ChatController {
      * TODO settimana 10: registra dei tool (@Tool) che interrogano il DB,
      *      es. "quanti documenti ho caricato questo mese?"
      */
+
+    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<FrammentoChat> chiediInStreaming(@Valid @RequestBody DomandaChat richiesta) {
+        return chatClient.prompt()
+                .user(richiesta.domanda())
+                .stream()                    // invece di call(): non aspetta la fine
+                .content()                   // Flux<String>: i pezzi di testo man mano
+                .map(FrammentoChat::new);    // ogni pezzo diventa {"testo": "..."}
+    }
 
 }
