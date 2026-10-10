@@ -25,11 +25,11 @@ spring:
           jwk-set-uri: ${JWK_SET_URI:http://localhost:8180/realms/docai/protocol/openid-connect/certs}
 
 # ===== Settimana 6+: decommenta e verifica i nomi delle proprietà sulla documentazione di Spring AI 2.0 =====
-#  ai:
-#    ollama:
-#      base-url: ${OLLAMA_URL:http://localhost:11434}
-#      chat:
-#        options:
+  ai:
+    ollama:
+      base-url: ${OLLAMA_URL:http://localhost:11434}
+      chat:
+        model: llama3.2
 #          model: llama3.2
 #      embedding:
 #        options:
@@ -53,3 +53,4 @@ server:
   #tomcat:
     #threads:
       #max: 10
+

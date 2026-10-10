@@ -1,5 +1,7 @@
 package it.docai.chat;
 
+import jakarta.validation.Valid;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -9,6 +11,24 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {
+
+    private final ChatClient chatClient;
+
+    // Spring Boot crea il Builder già configurato per Ollama (base-url e modello da application.yml)
+    public ChatController(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+    }
+
+
+    @PostMapping
+    public RispostaChat chiedi(@Valid @RequestBody DomandaChat richiesta) {
+        String testo = chatClient.prompt()
+                .user(richiesta.domanda())   // il messaggio dell'utente
+                .call()                      // chiamata sincrona: aspetta la risposta completa
+                .content();                  // solo il testo
+        return new RispostaChat(testo);
+    }
+
 
     public record DomandaRequest(String domanda) {}
 
@@ -23,9 +43,5 @@ public class ChatController {
      * TODO settimana 10: registra dei tool (@Tool) che interrogano il DB,
      *      es. "quanti documenti ho caricato questo mese?"
      */
-    @PostMapping
-    public ProblemDetail chiedi(@RequestBody DomandaRequest request, @AuthenticationPrincipal Jwt jwt) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_IMPLEMENTED,
-                "La chat arriva nella settimana 6 del piano");
-    }
+
 }
