@@ -40,6 +40,7 @@ public class Indicizzatore {
     }
 
     /** Niente @Transactional: gli embedding richiedono secondi o minuti. */
+    /** Niente @Transactional: gli embedding richiedono secondi o minuti. */
     public EsitoIndicizzazione indicizza(Documento documento) {
         long inizio = System.currentTimeMillis();
 
@@ -63,14 +64,18 @@ public class Indicizzatore {
         // 2. ogni pagina in chunk: i metadati vengono copiati su ogni chunk
         List<Document> chunk = splitter.apply(perPagina);
 
-        // 3. idempotente: via i vecchi, dentro i nuovi
-        cancellaChunk(documento.getId());
-        vectorStore.add(chunk);
-
-        List<String> vecchi = idChunk(documento.getId());
+        // 3. prima i nuovi, poi via i vecchi: il documento non resta mai senza chunk
+        List<String> vecchi = idChunk(documento.getId());   // fotografia PRIMA dell'add
         vectorStore.add(chunk);
         if (!vecchi.isEmpty()) {
             vectorStore.delete(vecchi);
+        }
+
+        // 4. rete di sicurezza: INDICIZZATO deve voler dire "i chunk ci sono"
+        int salvati = idChunk(documento.getId()).size();
+        if (salvati != chunk.size()) {
+            throw new IllegalStateException("Attesi %d chunk per %s, trovati %d"
+                    .formatted(chunk.size(), documento.getNomeFile(), salvati));
         }
 
         long durata = System.currentTimeMillis() - inizio;
