@@ -6,6 +6,7 @@ import it.docai.documento.UploadNonValidoException;
 import it.docai.estrazione.ContenutoNonDisponibileException;
 import it.docai.estrazione.DocumentoTroppoLungoException;
 import it.docai.estrazione.TestoNonEstraibileException;
+import it.docai.rag.ConversazioneNonTrovataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
@@ -110,6 +111,14 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         var problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         problema.setTitle("Documento troppo lungo");
         problema.setType(URI.create("https://docai.it/errori/documento-troppo-lungo"));
+        return problema;
+    }
+
+    @ExceptionHandler(ConversazioneNonTrovataException.class)
+    ProblemDetail conversazioneNonTrovata(ConversazioneNonTrovataException e) {
+        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        problema.setTitle("Conversazione non trovata");
+        problema.setType(URI.create("https://docai.it/errori/conversazione-non-trovata"));
         return problema;
     }
 }
