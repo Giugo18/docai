@@ -11,11 +11,13 @@ import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,22 +31,23 @@ public class RagService {
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
     private final String regole;
+    private record Contesto(List<Fonte> fonti, String messaggio) {}
+    private final RicercaIbrida ricercaIbrida;
 
-    public RagService(VectorStore vectorStore, ChatClient chatClient,
+    public RagService(VectorStore vectorStore, ChatClient chatClient, RicercaIbrida ricercaIbrida,
                       @Value("classpath:prompts/rag.st") Resource prompt) throws IOException {
         this.vectorStore = vectorStore;
         this.chatClient = chatClient;
+        this.ricercaIbrida = ricercaIbrida;
         this.regole = prompt.getContentAsString(StandardCharsets.UTF_8);
     }
 
-    public RispostaDocumenti chiedi(String domanda, UUID documentoId, String proprietario) {
-        // 1. retrieve: solo i chunk di chi chiede
+    private Optional<Contesto> prepara(String domanda, UUID documentoId, String proprietario) {
         List<Document> trovati = cerca(domanda, documentoId, proprietario);
         if (trovati.isEmpty()) {
-            return new RispostaDocumenti(NIENTE, List.of());       // 2. niente modello
+            log.info("RAG: '{}' → nessuna fonte", domanda);
+            return Optional.empty();
         }
-
-        // 3. augment: fonti numerate nel prompt
         List<Fonte> fonti = new ArrayList<>();
         var contesto = new StringBuilder();
         for (int i = 0; i < trovati.size(); i++) {
@@ -54,34 +57,38 @@ public class RagService {
             contesto.append("[Fonte %d] %s, pagina %d%n%s%n%n"
                     .formatted(fonte.numero(), fonte.nomeFile(), fonte.pagina(), d.getText()));
         }
+        log.info("RAG: '{}' → {} fonti, migliore {}", domanda, fonti.size(), fonti.getFirst().punteggio());
+        return Optional.of(new Contesto(fonti, "FONTI:\n" + contesto + "\nDOMANDA: " + domanda));
+    }
 
-        // 4. generate
-        String risposta = chatClient.prompt()
-                .system(regole)                                   // sostituisce il system della chat
-                .user("FONTI:\n" + contesto + "\nDOMANDA: " + domanda)
-                .options(ChatOptions.builder().temperature(0.2))
-                .call()
-                .content();
+    private ChatClient.ChatClientRequestSpec richiesta(Contesto c) {
+        return chatClient.prompt()
+                .system(regole)
+                .user(c.messaggio())
+                .options(ChatOptions.builder().temperature(0.2));
+    }
 
-        log.info("RAG: '{}' → {} fonti, migliore {}", domanda, fonti.size(),
-                fonti.getFirst().punteggio());
-        return new RispostaDocumenti(risposta, fonti);
+    public RispostaDocumenti chiedi(String domanda, UUID documentoId, String proprietario) {
+        return prepara(domanda, documentoId, proprietario)
+                .map(c -> new RispostaDocumenti(richiesta(c).call().content(), c.fonti()))
+                .orElse(new RispostaDocumenti(NIENTE, List.of()));
+    }
+
+    public Flux<EventoRag> chiediInStreaming(String domanda, UUID documentoId, String proprietario) {
+        return prepara(domanda, documentoId, proprietario)
+                .map(c -> Flux.concat(
+                        Flux.just(EventoRag.fonti(c.fonti())),                          // prima le fonti
+                        richiesta(c).stream().content().map(EventoRag::testo)))         // poi il testo, a pezzi
+                .orElse(Flux.just(EventoRag.fonti(List.of()), EventoRag.testo(NIENTE)));
     }
 
     private List<Document> cerca(String domanda, UUID documentoId, String proprietario) {
-        var b = new FilterExpressionBuilder();
-        var filtro = documentoId == null
-                ? b.eq("proprietario", proprietario)
-                : b.and(b.eq("proprietario", proprietario), b.eq("documentoId", documentoId.toString()));
-
-        return vectorStore.similaritySearch(SearchRequest.builder()
-                .query(domanda)
-                .topK(CHUNK_DA_USARE)
-                .similarityThreshold(SOGLIA_MINIMA)
-                .filterExpression(filtro.build())
-                .build());
+        List<Document> trovati = ricercaIbrida.cerca(domanda, documentoId, proprietario, CHUNK_DA_USARE, SOGLIA_MINIMA);
+        trovati.forEach(d -> log.debug("  {} p.{} sim={} rrf={} parole={}",
+                d.getMetadata().get("nomeFile"), d.getMetadata().get("pagina"),
+                d.getScore(), d.getMetadata().get("rrf"), d.getMetadata().get("perParole")));
+        return trovati;
     }
-
     private static Fonte fonte(int numero, Document d) {
         var m = d.getMetadata();
         String testo = d.getText();

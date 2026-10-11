@@ -65,3 +65,9 @@
 <p class="mt-4 text-sm text-slate-500">Caricamento…</p>
 }
 <app-estrazione-fattura [idDocumento]="id()" />
+
+@if (documento()?.stato === 'INDICIZZATO') {
+  <div class="mt-8">
+    <app-chiedi-documenti [documentoId]="id()" />
+  </div>
+}

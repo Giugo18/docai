@@ -61,4 +61,7 @@ server:
   #tomcat:
     #threads:
       #max: 10
+logging:
+  level:
+    it.docai.rag: debug
 

@@ -4,6 +4,7 @@ import { DettaglioDocumento } from './documenti/dettaglio-documento/dettaglio-do
 import { soloAdmin } from './admin/solo-admin';
 import { PaginaAdmin } from './admin/pagina-admin/pagina-admin';
 import { PaginaChat } from './chat/pagina-chat/pagina-chat';
+import { ChiediDocumenti } from './rag/chiedi-documenti/chiedi-documenti';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'documenti', pathMatch: 'full' },
@@ -11,5 +12,6 @@ export const routes: Routes = [
   { path: 'documenti/:id', component: DettaglioDocumento },
   { path: 'admin', component: PaginaAdmin, canActivate: [soloAdmin] },
   { path: 'chat', component: PaginaChat },
+  { path: 'chiedi', component: ChiediDocumenti },
   { path: '**', redirectTo: 'documenti' },
 ];
