@@ -26,6 +26,18 @@ spring:
 
 # ===== Settimana 6+: decommenta e verifica i nomi delle proprietà sulla documentazione di Spring AI 2.0 =====
   ai:
+    model:
+      chat: ${AI_CHAT:ollama}          # chi genera il testo: ollama (locale) oppure openai (= Groq)
+      embedding: ollama                # i vettori restano sempre su Ollama (bge-m3)
+      image: none                      # funzioni OpenAI che non usiamo: spente
+      audio.speech: none
+      audio.transcription: none
+      moderation: none
+    openai:
+      api-key: ${GROQ_API_KEY:}
+      base-url: https://api.groq.com/openai/v1
+      chat:
+        model: ${GROQ_MODEL:openai/gpt-oss-120b}
     ollama:
       base-url: ${OLLAMA_URL:http://localhost:11434}
       chat:

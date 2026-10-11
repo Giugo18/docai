@@ -94,6 +94,10 @@
             <scope>import</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
         <!-- ===== Settimane 8-9: decommenta per il RAG =====
         <dependency>
             <groupId>org.springframework.ai</groupId>

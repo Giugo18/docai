@@ -11,6 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class Valutazione {
@@ -42,9 +43,11 @@ public class Valutazione {
                     break;
                 }
             }
+
+
             boolean fonteTrovata = caso.nonDeveTrovare() || posizione != null;
             boolean corretta = caso.nonDeveTrovare()
-                    ? r.risposta().contains("Non trovo")
+                    ? normalizza(r.risposta()).contains("non trovo")
                     : contieneTutte(r.risposta(), caso.paroleAttese());
 
             esiti.add(new EsitoCaso(caso.domanda(), fonteTrovata, posizione, corretta, durata, r.risposta()));
@@ -61,7 +64,15 @@ public class Valutazione {
     }
 
     private static boolean contieneTutte(String testo, List<String> parole) {
-        String t = testo.toLowerCase();
-        return parole.stream().allMatch(p -> t.contains(p.toLowerCase()));
+        String t = normalizza(testo);
+        return parole.stream().allMatch(p -> t.contains(normalizza(p)));
+    }
+
+    private static String normalizza(String testo) {
+        return testo.toLowerCase(Locale.ITALIAN)
+                .replaceAll("[\\u2010-\\u2015\\u2212]", "-")   // trattini tipografici → '-'
+                .replaceAll("[\\u2018\\u2019]", "'")            // apostrofi tipografici → '
+                .replaceAll("[\\u201C\\u201D]", "\"")           // virgolette tipografiche → "
+                .replace('\u00A0', ' ');                        // spazio non separabile → spazio
     }
 }
