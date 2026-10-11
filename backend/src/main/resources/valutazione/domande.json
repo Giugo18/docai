@@ -1,0 +1,28 @@
+[
+  { "domanda": "Quanto ho speso per i biglietti da visita?", "documento": "fattura2.pdf",
+    "paroleAttese": ["60"] },
+  { "domanda": "Quanto ho speso per i volantini?", "documento": "fattura2.pdf",
+    "paroleAttese": ["160"] },
+  { "domanda": "Chi ha emesso la fattura della tipografia?", "documento": "fattura2.pdf",
+    "paroleAttese": ["Rossi"] },
+  { "domanda": "Qual è il totale della fattura, IVA inclusa?", "documento": "fattura2.pdf",
+    "paroleAttese": ["451"] },
+
+  { "domanda": "Che cos'è il berimbau?", "documento": "Book-Capoeira-Angola-Ensaio-Socio-Etnografico-Segunda-Edicao.pdf",
+    "paroleAttese": ["strumento"] },
+  { "domanda": "Che cos'è la roda nella capoeira?", "documento": "Book-Capoeira-Angola-Ensaio-Socio-Etnografico-Segunda-Edicao.pdf",
+    "paroleAttese": ["cerchio"] },
+
+  { "domanda": "Dove trovo l'elenco dei verbi irregolari inglesi?", "documento": "dispensa_full.pdf",
+    "paroleAttese": [] },
+
+  { "domanda": "Quale modello di embedding usa DocAI?", "documento": "Manuale-DocAI (5).pdf",
+    "paroleAttese": ["bge-m3"] },
+  { "domanda": "Su quale porta gira Keycloak in sviluppo?", "documento": "Manuale-DocAI (5).pdf",
+    "paroleAttese": ["8180"] },
+  { "domanda": "Che database usa DocAI?", "documento": "Manuale-DocAI (5).pdf",
+    "paroleAttese": ["Postgres"] },
+
+  { "domanda": "Chi ha vinto i mondiali di calcio nel 2022?", "nonDeveTrovare": true },
+  { "domanda": "Qual è la capitale dell'Australia?", "nonDeveTrovare": true }
+]

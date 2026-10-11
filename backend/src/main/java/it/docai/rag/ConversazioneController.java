@@ -19,10 +19,10 @@ public class ConversazioneController {
         this.service = service;
     }
 
-    @GetMapping
+    /*@GetMapping
     List<ConversazioneDto> elenca(@AuthenticationPrincipal Jwt jwt) {
         return service.elenca(jwt.getSubject());
-    }
+    }*/
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -39,5 +39,10 @@ public class ConversazioneController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void elimina(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         service.elimina(id, jwt.getSubject());
+    }
+
+    @GetMapping
+    List<ConversazioneDto> elenca(@RequestParam(required = false) UUID documentoId, @AuthenticationPrincipal Jwt jwt) {
+        return service.elenca(jwt.getSubject(), documentoId);
     }
 }

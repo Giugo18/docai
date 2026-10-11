@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface ConversazioneRepository extends JpaRepository<Conversazione, UUID> {
     List<Conversazione> findByProprietarioOrderByAggiornataIlDesc(String proprietario);
     Optional<Conversazione> findByIdAndProprietario(UUID id, String proprietario);
+    List<Conversazione> findByProprietarioAndDocumentoIdOrderByAggiornataIlDesc(String proprietario, UUID documentoId);
 }

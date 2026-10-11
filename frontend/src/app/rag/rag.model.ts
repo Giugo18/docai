@@ -8,7 +8,7 @@ export interface Fonte {
 }
 
 export interface EventoRag {
-  tipo: 'fonti' | 'testo';
+  tipo: 'fonti' | 'testo' | 'riscritta';
   testo: string | null;
   fonti: Fonte[] | null;
 }
@@ -17,4 +17,5 @@ export interface EventoRag {
 export interface StatoRisposta {
   fonti: Fonte[];
   testo: string;
+  riscritta: string | null;
 }

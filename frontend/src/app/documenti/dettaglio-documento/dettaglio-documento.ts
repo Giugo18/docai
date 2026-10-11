@@ -6,9 +6,10 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { messaggioErrore } from '../../errori/problem-detail';
 import { EstrazioneFattura } from '../../estrazione/estrazione-fattura/estrazione-fattura';
 import { ChiediDocumenti } from '../../rag/chiedi-documenti/chiedi-documenti';
+import { Conversazioni } from '../../rag/conversazioni/conversazioni';
 
 @Component({
-  imports: [RouterLink, DatePipe, DecimalPipe, EstrazioneFattura, ChiediDocumenti],
+  imports: [RouterLink, DatePipe, DecimalPipe, EstrazioneFattura, ChiediDocumenti, Conversazioni],
   selector: 'app-dettaglio-documento',
   styleUrl: './dettaglio-documento.scss',
   templateUrl: './dettaglio-documento.html',

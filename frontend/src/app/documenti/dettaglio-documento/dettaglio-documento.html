@@ -68,6 +68,8 @@
 
 @if (documento()?.stato === 'INDICIZZATO') {
   <div class="mt-8">
-    <app-chiedi-documenti [documentoId]="id()" />
+    <!--<app-chiedi-documenti [documentoId]="id()" /> Vechia versione -->
+    <app-conversazioni [documentoId]="id()" />
   </div>
+  
 }

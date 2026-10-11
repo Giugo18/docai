@@ -87,4 +87,12 @@ public class ConversazioneService {
         messaggi.save(Messaggio.dellAssistente(conversazioneId, risposta, json.writeValueAsString(fonti)));
         conversazioni.findById(conversazioneId).ifPresent(Conversazione::toccata);
     }
+
+    @Transactional(readOnly = true)
+    public List<ConversazioneDto> elenca(String proprietario, UUID documentoId) {
+        var lista = documentoId == null
+                ? conversazioni.findByProprietarioOrderByAggiornataIlDesc(proprietario)
+                : conversazioni.findByProprietarioAndDocumentoIdOrderByAggiornataIlDesc(proprietario, documentoId);
+        return lista.stream().map(ConversazioneDto::da).toList();
+    }
 }
