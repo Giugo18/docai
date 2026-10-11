@@ -44,6 +44,14 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
+  # Finto server email per lo sviluppo: riceve le email e le mostra su http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    container_name: docai-mailpit
+    profiles: [posta]
+    ports:
+      - "8025:8025"     # pagina web con le email ricevute
+      # SMTP sulla porta 1025: raggiungibile solo dagli altri container (es. Keycloak)
 
   ollama:
     image: ollama/ollama
@@ -95,3 +103,4 @@ services:
 volumes:
   pgdata:
   ollama:
+ 

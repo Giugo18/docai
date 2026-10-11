@@ -8,9 +8,13 @@ import {
   createInterceptorCondition,
   IncludeBearerTokenCondition,
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
+  withAutoRefreshToken,
+  AutoRefreshTokenService,
+  UserActivityService,
 } from 'keycloak-angular';
 import { registerLocaleData } from '@angular/common';
 import localeIt from '@angular/common/locales/it';
+import { sessioneScadutaInterceptor } from './auth/sessione-scaduta.interceptor';
 
 
 /** Configurazione letta da /config.json all'avvio: cambia per ambiente, l'immagine resta la stessa */
@@ -43,8 +47,15 @@ export function creaAppConfig(config: ConfigApp): ApplicationConfig {
           pkceMethod: 'S256',         // PKCE con SHA-256
           checkLoginIframe: false,    // niente iframe di controllo sessione: i browser bloccano i cookie di terze parti
         },
+        features: [
+          withAutoRefreshToken({
+            onInactivityTimeout: 'logout',          // inattivo → logout
+            sessionTimeout: 30 * 60 * 1000,         // 30 minuti senza attività
+          }),
+        ],
+        providers: [AutoRefreshTokenService, UserActivityService],
       }),
-      provideHttpClient(withInterceptors([includeBearerTokenInterceptor])),
+      provideHttpClient(withInterceptors([includeBearerTokenInterceptor, sessioneScadutaInterceptor])),
       { provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG, useValue: [soloApi] },
     ],
   };
