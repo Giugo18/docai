@@ -111,4 +111,11 @@ public class DocumentoService {
     public List<RigaStatistica> statistiche() {
         return repository.statistichePerProprietario();
     }
+
+    /** 404 se non esiste o se è di un altro utente: non diciamo quale dei due (IDOR). */
+    public Documento trovaDelProprietario(UUID id, String proprietario) {
+        return repository.findById(id)
+                .filter(d -> d.getProprietario().equals(proprietario))
+                .orElseThrow(() -> new DocumentoNonTrovatoException(id));
+    }
 }

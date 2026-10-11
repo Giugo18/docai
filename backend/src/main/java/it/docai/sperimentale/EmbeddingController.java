@@ -18,7 +18,8 @@ public class EmbeddingController {
     private final EmbeddingModel embeddingModel;
     private final VectorStore vectorStore;
     public record DaSalvare(@NotBlank String testo) {}
-    public record Trovato(String testo, Double punteggio) {}
+    public record Trovato(String nomeFile, Object pagina, Double punteggio, String testo) {}
+
 
     public EmbeddingController(EmbeddingModel embeddingModel, VectorStore vectorStore) {
         this.embeddingModel = embeddingModel;
@@ -52,7 +53,11 @@ public class EmbeddingController {
     List<Trovato> cerca(@RequestParam String q, @RequestParam(defaultValue = "3") int k) {
         return vectorStore.similaritySearch(SearchRequest.builder().query(q).topK(k).build())
                 .stream()
-                .map(d -> new Trovato(d.getText(), d.getScore()))
+                .map(d -> new Trovato(
+                        (String) d.getMetadata().get("nomeFile"),
+                        d.getMetadata().get("pagina"),
+                        d.getScore(),
+                        d.getText().substring(0, Math.min(120, d.getText().length()))))
                 .toList();
     }
 }
