@@ -3,6 +3,7 @@ package it.docai.documento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,4 +33,7 @@ public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
         ORDER BY COUNT(d) DESC
         """)
     List<RigaStatistica> statistichePerProprietario();
+
+    List<Documento> findByStato(StatoDocumento stato);
+    List<Documento> findByStatoIn(Collection<StatoDocumento> stati);
 }

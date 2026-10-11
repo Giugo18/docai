@@ -1,5 +1,6 @@
 package it.docai.documento;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,11 +17,15 @@ public class DocumentoService {
     private final DocumentoRepository repository;
     private final ValidatoreUpload validatoreUpload;
     private final ContenutoDocumentoRepository contenutoRepository;
+    private final ApplicationEventPublisher eventi;
 
-    public DocumentoService(DocumentoRepository repository, ValidatoreUpload validatoreUpload, ContenutoDocumentoRepository contenutoDocumentoRepository) {
+    public DocumentoService(DocumentoRepository repository, ValidatoreUpload validatoreUpload,
+                            ContenutoDocumentoRepository contenutoDocumentoRepository,
+                            ApplicationEventPublisher eventi) {
         this.repository = repository;
         this.validatoreUpload = validatoreUpload;
         this.contenutoRepository = contenutoDocumentoRepository;
+        this.eventi = eventi;
     }
 
     @Transactional
@@ -37,12 +42,16 @@ public class DocumentoService {
             throw new UncheckedIOException("Impossibile leggere il file caricato", e);
         }
 
+
         // TODO settimana 8: pipeline di ingestione
         //   1. leggi il contenuto con TikaDocumentReader
         //   2. spezza in chunk con TokenTextSplitter
         //   3. aggiungi ai metadati di ogni chunk "proprietario" e "documentoId"
         //   4. salva con vectorStore.add(chunks) e chiama documento.segnaIndicizzato()
         // TODO settimana 12: spostala in un processo asincrono (virtual thread)
+        // L'indicizzazione parte dopo il commit, su un altro thread (IndicizzazioneAutomatica)
+        eventi.publishEvent(new DocumentoCaricato(documento.getId()));
+
 
         return DocumentoDto.da(documento);
     }
@@ -117,5 +126,20 @@ public class DocumentoService {
         return repository.findById(id)
                 .filter(d -> d.getProprietario().equals(proprietario))
                 .orElseThrow(() -> new DocumentoNonTrovatoException(id));
+    }
+
+    @Transactional
+    public void iniziaIndicizzazione(UUID id) {
+        repository.findById(id).ifPresent(Documento::iniziaIndicizzazione);
+    }
+
+    @Transactional
+    public void segnaIndicizzato(UUID id) {
+        repository.findById(id).ifPresent(Documento::segnaIndicizzato);
+    }
+
+    @Transactional
+    public void segnaErrore(UUID id) {
+        repository.findById(id).ifPresent(Documento::segnaErrore);
     }
 }

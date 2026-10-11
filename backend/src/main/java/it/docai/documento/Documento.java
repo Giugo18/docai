@@ -49,7 +49,7 @@ public class Documento {
 
     public void segnaIndicizzato() { this.stato = StatoDocumento.INDICIZZATO; }
     public void segnaErrore()      { this.stato = StatoDocumento.ERRORE; }
-
+    public void iniziaIndicizzazione() { this.stato = StatoDocumento.IN_INDICIZZAZIONE; }
     public UUID getId()               { return id; }
     public String getNomeFile()       { return nomeFile; }
     public String getContentType()    { return contentType; }
@@ -61,4 +61,6 @@ public class Documento {
     public void rinomina(String nuovoNome) {
         this.nomeFile = nuovoNome;
     }
+
+
 }
