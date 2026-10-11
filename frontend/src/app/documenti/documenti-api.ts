@@ -4,11 +4,11 @@ import { DocumentoDto, RiepilogoDocumenti } from './documento';
 
 @Service()
 export class DocumentiApi {
-    private readonly http = inject(HttpClient);
-    private readonly _documenti = signal<DocumentoDto[]>([]);
-    readonly documenti = this._documenti.asReadonly();   // gli altri leggono, solo il servizio scrive
-    private readonly _riepilogo = signal<RiepilogoDocumenti | null>(null);
-    readonly riepilogo = this._riepilogo.asReadonly();
+  private readonly http = inject(HttpClient);
+  private readonly _documenti = signal<DocumentoDto[]>([]);
+  readonly documenti = this._documenti.asReadonly();   // gli altri leggono, solo il servizio scrive
+  private readonly _riepilogo = signal<RiepilogoDocumenti | null>(null);
+  readonly riepilogo = this._riepilogo.asReadonly();
 
 
   elenca() {
@@ -34,5 +34,9 @@ export class DocumentiApi {
 
   rinomina(id: string, nomeFile: string) {
     return this.http.patch<DocumentoDto>(`/api/documenti/${id}`, { nomeFile });
-}
+  }
+
+  elimina(id: string) {
+    return this.http.delete<void>(`/api/documenti/${id}`);
+  }
 }

@@ -57,6 +57,12 @@ public class IndicizzazioneAutomatica {
         documenti.iniziaIndicizzazione(id);
         try {
             indicizzatore.indicizza(documento);
+            if (!repository.existsById(id)) {
+                // eliminato mentre lo indicizzavamo: via i chunk appena salvati
+                indicizzatore.cancellaChunk(id);
+                log.info("{} eliminato durante l'indicizzazione: chunk rimossi", documento.getNomeFile());
+                return;
+            }
             documenti.segnaIndicizzato(id);
         } catch (Exception e) {
             log.error("Indicizzazione fallita per {}", documento.getNomeFile(), e);

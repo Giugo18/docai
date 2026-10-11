@@ -26,10 +26,17 @@
         } @else {
         <div class="flex items-start gap-3">
             <h2 class="break-all text-xl font-semibold">{{ d.nomeFile }}</h2>
-            <button type="button" (click)="modifica()"
-                class="shrink-0 cursor-pointer rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
-                Rinomina
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" (click)="modifica()"
+                    class="shrink-0 cursor-pointer rounded-lg border border-green-300 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50">
+                    Rinomina
+                </button>
+
+                <button type="button" (click)="elimina()" [disabled]="eliminazione()"
+                    class="shrink-0 cursor-pointer rounded-lg border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60">
+                    {{ eliminazione() ? 'Eliminazione…' : 'Elimina' }}
+                </button>
+            </div>
         </div>
         }
         <span class="self-start rounded-full px-2 py-0.5 text-xs font-medium" [class]="coloriStato[d.stato]">{{ d.stato

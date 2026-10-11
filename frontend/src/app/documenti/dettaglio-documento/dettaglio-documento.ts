@@ -1,7 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { DocumentiApi } from '../documenti-api';
 import { COLORI_STATO, DocumentoDto } from '../documento';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { messaggioErrore } from '../../errori/problem-detail';
 import { EstrazioneFattura } from '../../estrazione/estrazione-fattura/estrazione-fattura';
@@ -26,6 +26,8 @@ export class DettaglioDocumento {
   readonly nuovoNome = signal('');
   readonly erroreNome = signal('');
   readonly salvataggio = signal(false);
+  private readonly router = inject(Router);
+  readonly eliminazione = signal(false);
 
   ngOnInit() {
     this.api.trova(this.id()).subscribe({
@@ -60,6 +62,23 @@ export class DettaglioDocumento {
       error: errore => {
         this.erroreNome.set(messaggioErrore(errore, 'Rinomina non riuscita'));
         this.salvataggio.set(false);
+      },
+    });
+  }
+
+  elimina() {
+    const nome = this.documento()?.nomeFile;
+    if (!confirm(`Eliminare "${nome}"? Verranno cancellati anche i dati per le ricerche.`)) return;
+
+    this.eliminazione.set(true);
+    this.api.elimina(this.id()).subscribe({
+      next: () => {
+        this.api.aggiorna();                       // lista e riepilogo aggiornati
+        this.router.navigate(['/documenti']);
+      },
+      error: e => {
+        this.errore.set(messaggioErrore(e, 'Eliminazione non riuscita'));
+        this.eliminazione.set(false);
       },
     });
   }

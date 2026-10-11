@@ -142,4 +142,11 @@ public class DocumentoService {
     public void segnaErrore(UUID id) {
         repository.findById(id).ifPresent(Documento::segnaErrore);
     }
+
+    @Transactional
+    public void elimina(UUID id, String proprietario) {
+        Documento documento = trovaDelProprietario(id, proprietario);   // 404 se non è suo
+        repository.delete(documento);                                   // contenuto: ON DELETE CASCADE
+        eventi.publishEvent(new DocumentoEliminato(id));                // chunk: listener BEFORE_COMMIT
+    }
 }

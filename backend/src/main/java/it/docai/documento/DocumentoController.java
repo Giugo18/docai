@@ -49,4 +49,10 @@ public class DocumentoController {
                                  @AuthenticationPrincipal Jwt jwt) {
         return service.rinomina(id, richiesta.nomeFile(), jwt.getSubject());
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void elimina(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        service.elimina(id, jwt.getSubject());
+    }
 }
