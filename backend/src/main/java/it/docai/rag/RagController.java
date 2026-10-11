@@ -53,4 +53,12 @@ public class RagController {
             documenti.trovaDelProprietario(richiesta.documentoId(), jwt.getSubject());   // 404 se non è mio
         }
     }
+
+
+    @PostMapping(value = "/conversazioni/{id}/domanda/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<EventoRag> domandaInConversazione(@PathVariable UUID id,
+                                           @Valid @RequestBody DomandaInConversazione richiesta,
+                                           @AuthenticationPrincipal Jwt jwt) {
+        return rag.chiediInConversazione(id, richiesta.domanda(), jwt.getSubject());
+    }
 }

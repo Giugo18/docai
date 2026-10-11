@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface MessaggioRepository extends JpaRepository<Messaggio, UUID> {
     List<Messaggio> findByConversazioneIdOrderByCreatoIl(UUID conversazioneId);
+    List<Messaggio> findTop6ByConversazioneIdOrderByCreatoIlDesc(UUID conversazioneId);
+
 }

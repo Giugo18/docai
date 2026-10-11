@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,5 +66,25 @@ public class ConversazioneService {
 
     private List<Fonte> leggiFonti(String fontiJson) {
         return fontiJson == null ? List.of() : json.readValue(fontiJson, LISTA_FONTI);
+    }
+
+    /** Gli ultimi messaggi, dal più vecchio al più nuovo. */
+    @Transactional(readOnly = true)
+    public List<Messaggio> ultimi(UUID conversazioneId) {
+        var recenti = new ArrayList<>(messaggi.findTop6ByConversazioneIdOrderByCreatoIlDesc(conversazioneId));
+        Collections.reverse(recenti);
+        return recenti;
+    }
+
+    @Transactional
+    public void registraDomanda(UUID conversazioneId, String domanda) {
+        messaggi.save(Messaggio.dellUtente(conversazioneId, domanda));
+        conversazioni.findById(conversazioneId).ifPresent(Conversazione::toccata);
+    }
+
+    @Transactional
+    public void registraRisposta(UUID conversazioneId, String risposta, List<Fonte> fonti) {
+        messaggi.save(Messaggio.dellAssistente(conversazioneId, risposta, json.writeValueAsString(fonti)));
+        conversazioni.findById(conversazioneId).ifPresent(Conversazione::toccata);
     }
 }
