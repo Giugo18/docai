@@ -2,26 +2,26 @@
   <!-- elenco conversazioni -->
   <aside class="rounded-lg border border-gray-200 bg-white p-3">
     <button type="button" (click)="nuova()"
-            class="w-full rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">
+      class="w-full rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">
       + Nuova conversazione
     </button>
     <ul class="mt-3 space-y-1">
       @for (c of conversazioni(); track c.id) {
-        <li (click)="apri(c.id)"
-            class="group flex cursor-pointer items-start gap-2 rounded px-2 py-2 text-sm hover:bg-gray-50"
-            [class.bg-blue-50]="attiva() === c.id">
-          <div class="min-w-0 flex-1">
-            <p class="truncate font-medium">{{ c.titolo }}</p>
-            <p class="text-xs text-gray-500">
-              {{ c.aggiornataIl | date: 'dd/MM HH:mm' }}
-              @if (c.documentoId && !documentoId()) { · su un documento }
-            </p>
-          </div>
-          <button type="button" (click)="elimina(c, $event)" title="Elimina"
-                  class="invisible text-gray-400 hover:text-red-600 group-hover:visible">✕</button>
-        </li>
+      <li (click)="apri(c.id)"
+        class="group flex cursor-pointer items-start gap-2 rounded px-2 py-2 text-sm hover:bg-gray-50"
+        [class.bg-blue-50]="attiva() === c.id">
+        <div class="min-w-0 flex-1">
+          <p class="truncate font-medium">{{ c.titolo }}</p>
+          <p class="text-xs text-gray-500">
+            {{ c.aggiornataIl | date: 'dd/MM HH:mm' }}
+            @if (c.documentoId && !documentoId()) { · su un documento }
+          </p>
+        </div>
+        <button type="button" (click)="elimina(c, $event)" title="Elimina"
+          class="invisible text-gray-400 hover:text-red-600 group-hover:visible">✕</button>
+      </li>
       } @empty {
-        <li class="px-2 py-2 text-sm text-gray-500">Nessuna conversazione</li>
+      <li class="px-2 py-2 text-sm text-gray-500">Nessuna conversazione</li>
       }
     </ul>
   </aside>
@@ -34,56 +34,56 @@
 
     <div class="flex-1 space-y-4">
       @for (m of messaggi(); track $index) {
-        @if (m.ruolo === 'UTENTE') {
-          <div class="ml-auto w-fit max-w-[80%] rounded-lg bg-blue-600 px-3 py-2 text-sm text-white">{{ m.testo }}</div>
-        } @else {
-          <div class="max-w-[90%]">
-            <!-- Riga "Ho cercato": nascosta per ora, il dato arriva comunque (stato.riscritta)
+      @if (m.ruolo === 'UTENTE') {
+      <div class="ml-auto w-fit max-w-[80%] rounded-lg bg-blue-600 px-3 py-2 text-sm text-white">{{ m.testo }}</div>
+      } @else {
+      <div class="max-w-[90%]">
+        <!-- Riga "Ho cercato": nascosta per ora, il dato arriva comunque (stato.riscritta)
             @if (m.riscritta && m.riscritta !== messaggi()[$index - 1]?.testo) {
               <p class="mb-1 text-xs italic text-gray-500">Ho cercato: {{ m.riscritta }}</p>
           } -->
-            <div class="whitespace-pre-line rounded-lg bg-gray-50 px-3 py-2 text-sm leading-relaxed">
-              @if (m.inCorso && !m.testo) {
-                <span class="flex items-center gap-2 text-gray-500">
-                  {{ fase(m, $index) }}
-                  <span class="puntini" aria-hidden="true"><span></span><span></span><span></span></span>
-                </span>
-              } @else {
-                {{ m.testo }}@if (m.inCorso) {<span class="animate-pulse">▍</span>}
-              }
-            </div>
-            @if (m.fonti.length) {
-              <details class="mt-1 text-xs text-gray-600">
-                <summary class="cursor-pointer">Fonti ({{ m.fonti.length }})</summary>
-                <ul class="mt-1 space-y-1 pl-2">
-                  @for (f of m.fonti; track f.numero) {
-                    <li>
-                      [{{ f.numero }}]
-                      <a [routerLink]="['/documenti', f.documentoId]" class="text-blue-600 hover:underline">{{ f.nomeFile }}</a>,
-                      pagina {{ f.pagina }}
-                    </li>
-                  }
-                </ul>
-              </details>
+        <div class="rounded-lg bg-gray-50 px-3 py-2 text-sm leading-relaxed">
+          @if (m.inCorso && !m.testo) {
+          <span class="flex items-center gap-2 text-gray-500">
+            {{ fase(m, $index) }}
+            <span class="puntini" aria-hidden="true"><span></span><span></span><span></span></span>
+          </span>
+          } @else {
+          <div class="markdown" [innerHTML]="(m.inCorso ? m.testo + ' ▍' : m.testo) | markdown"></div>
+          }
+        </div>
+        @if (m.fonti.length) {
+        <details class="mt-1 text-xs text-gray-600">
+          <summary class="cursor-pointer">Fonti ({{ m.fonti.length }})</summary>
+          <ul class="mt-1 space-y-1 pl-2">
+            @for (f of m.fonti; track f.numero) {
+            <li>
+              [{{ f.numero }}]
+              <a [routerLink]="['/documenti', f.documentoId]" class="text-blue-600 hover:underline">{{ f.nomeFile
+                }}</a>,
+              pagina {{ f.pagina }}
+            </li>
             }
-          </div>
+          </ul>
+        </details>
         }
+      </div>
+      }
       } @empty {
-        <p class="text-sm text-gray-500">Fai una domanda: le risposte citano le pagine dei documenti.</p>
+      <p class="text-sm text-gray-500">Fai una domanda: le risposte citano le pagine dei documenti.</p>
       }
     </div>
 
     @if (errore()) {
-      <div class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ errore() }}</div>
+    <div class="mt-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{{ errore() }}</div>
     }
 
     <div class="mt-4 flex gap-2">
-      <textarea rows="2" [value]="domanda()" (input)="scrivi($event)"
-                (keydown.enter)="$event.preventDefault(); invia()"
-                placeholder="Es. Quanto ho speso per i biglietti da visita?"
-                class="flex-1 resize-none rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none"></textarea>
+      <textarea rows="2" [value]="domanda()" (input)="scrivi($event)" (keydown.enter)="$event.preventDefault(); invia()"
+        placeholder="Es. Quanto ho speso per i biglietti da visita?"
+        class="flex-1 resize-none rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none"></textarea>
       <button type="button" (click)="invia()" [disabled]="inCorso() || !domanda().trim()"
-              class="self-end rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60">
+        class="self-end rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60">
         {{ inCorso() ? 'Cerco…' : 'Chiedi' }}
       </button>
     </div>

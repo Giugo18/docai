@@ -5,7 +5,6 @@ import { Router, RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { messaggioErrore } from '../../errori/problem-detail';
 import { EstrazioneFattura } from '../../estrazione/estrazione-fattura/estrazione-fattura';
-import { ChiediDocumenti } from '../../rag/chiedi-documenti/chiedi-documenti';
 import { Conversazioni } from '../../rag/conversazioni/conversazioni';
 
 @Component({

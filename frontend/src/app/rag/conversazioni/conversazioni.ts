@@ -5,10 +5,11 @@ import { map, of, Subscription, switchMap, tap } from 'rxjs';
 import { ConversazioniApi } from '../conversazioni-api';
 import { ConversazioneDto, MessaggioVista } from '../conversazioni.model';
 import { messaggioErrore } from '../../errori/problem-detail';
+import { MarkdownPipe } from '../markdown.pipe';
 
 @Component({
   selector: 'app-conversazioni',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, MarkdownPipe],
   templateUrl: './conversazioni.html',
   styleUrl: './conversazioni.scss',
 })
