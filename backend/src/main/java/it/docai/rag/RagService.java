@@ -82,7 +82,7 @@ public class RagService {
 
     public RispostaDocumenti chiedi(String domanda, UUID documentoId, String proprietario) {
         return prepara(domanda, documentoId, proprietario)
-                .map(c -> new RispostaDocumenti(richiesta(c).call().content(), c.fonti()))
+                .map(c -> new RispostaDocumenti(Citazioni.normalizza(richiesta(c).call().content()), c.fonti()))
                 .orElse(new RispostaDocumenti(NIENTE, List.of()));
     }
 
@@ -136,7 +136,7 @@ public class RagService {
                 .content()
                 .doOnNext(risposta::append)                        // accumula i pezzi...
                 .doOnComplete(() ->                                // ...e a fine stream salva
-                        conversazioneService.registraRisposta(c.getId(), risposta.toString(), ctx.fonti()))
+                        conversazioneService.registraRisposta(c.getId(), Citazioni.normalizza(risposta.toString()), ctx.fonti()))
                 .map(EventoRag::testo);
 
         return Flux.concat(Flux.just(EventoRag.riscritta(autonoma), EventoRag.fonti(ctx.fonti())), testo);
