@@ -1,5 +1,6 @@
 package it.docai.strumenti;
 
+import it.docai.rag.Fonte;
 import it.docai.rag.RicercaIbrida;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class StrumentiRicerca {
@@ -33,19 +36,26 @@ public class StrumentiRicerca {
             (ricerca semantica e per parole). Restituisce fino a 5 passaggi con numero di fonte, \
             nome del file, pagina e testo. Usalo per domande su cosa c'è scritto nei documenti: \
             importi, nomi, date, definizioni, spiegazioni.""")
+    @SuppressWarnings("unchecked")
     public List<Passaggio> cercaNeiDocumenti(
             @ToolParam(description = "Cosa cercare: una domanda completa e autonoma, in italiano") String domanda,
             ToolContext contesto) {
-        String proprietario = (String) contesto.getContext().get(StrumentiDocumenti.PROPRIETARIO);
+        Map<String, Object> c = contesto.getContext();
+        String proprietario = (String) c.get(ContestoStrumenti.PROPRIETARIO);
+        UUID documentoId = (UUID) c.get(ContestoStrumenti.DOCUMENTO);           // null = tutti i documenti
+        List<Fonte> raccolte = (List<Fonte>) c.get(ContestoStrumenti.FONTI);
         log.info("Tool cercaNeiDocumenti '{}' per {}", domanda, proprietario);
 
-        List<Document> trovati = ricerca.cerca(domanda, null, proprietario, PASSAGGI, SOGLIA);
         var passaggi = new ArrayList<Passaggio>();
-        for (int i = 0; i < trovati.size(); i++) {
-            Document d = trovati.get(i);
+        for (Document d : ricerca.cerca(domanda, documentoId, proprietario, PASSAGGI, SOGLIA)) {
             var m = d.getMetadata();
-            passaggi.add(new Passaggio(i + 1, (String) m.get("nomeFile"),
-                    ((Number) m.get("pagina")).intValue(), d.getText()));
+            int numero = raccolte.size() + 1;                                      // numerazione unica
+            String nomeFile = (String) m.get("nomeFile");
+            int pagina = ((Number) m.get("pagina")).intValue();
+            String testo = d.getText();
+            raccolte.add(new Fonte(numero, (String) m.get("documentoId"), nomeFile, pagina,
+                    d.getScore(), testo.substring(0, Math.min(200, testo.length()))));
+            passaggi.add(new Passaggio(numero, nomeFile, pagina, testo));
         }
         return passaggi;
     }

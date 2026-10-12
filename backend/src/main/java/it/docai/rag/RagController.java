@@ -2,6 +2,7 @@ package it.docai.rag;
 
 import it.docai.documento.Documento;
 import it.docai.documento.DocumentoService;
+import it.docai.strumenti.AssistenteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,13 +20,16 @@ public class RagController {
     private final DocumentoService documenti;
     private final IndicizzazioneAutomatica indicizzazioneAutomatica;
     private final RagService rag;
+    private final AssistenteService assistenteService;
 
     public RagController(DocumentoService documenti,
                          IndicizzazioneAutomatica indicizzazioneAutomatica,
-                         RagService rag) {
+                         RagService rag,
+                         AssistenteService assistenteService) {
         this.documenti = documenti;
         this.indicizzazioneAutomatica = indicizzazioneAutomatica;
         this.rag = rag;
+        this.assistenteService = assistenteService;
     }
 
     @PostMapping("/documenti/{id}/indicizza")
@@ -59,6 +63,6 @@ public class RagController {
     Flux<EventoRag> domandaInConversazione(@PathVariable UUID id,
                                            @Valid @RequestBody DomandaInConversazione richiesta,
                                            @AuthenticationPrincipal Jwt jwt) {
-        return rag.chiediInConversazione(id, richiesta.domanda(), jwt.getSubject());
-    }
+        //return rag.chiediInConversazione(id, richiesta.domanda(), jwt.getSubject());
+        return assistenteService.rispondiInConversazione(id, richiesta.domanda(), jwt.getSubject());    }
 }

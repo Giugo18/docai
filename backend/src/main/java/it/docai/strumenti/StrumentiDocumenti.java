@@ -15,7 +15,7 @@ import java.util.List;
 public class StrumentiDocumenti {
 
     private static final Logger log = LoggerFactory.getLogger(StrumentiDocumenti.class);
-    static final String PROPRIETARIO = "proprietario";
+    static final String PROPRIETARIO = ContestoStrumenti.PROPRIETARIO;
 
     private final DocumentoService documenti;
 

@@ -59,7 +59,7 @@ public class ConversazioneService {
         conversazioni.delete(trova(id, proprietario));   // i messaggi: ON DELETE CASCADE
     }
 
-    Conversazione trova(UUID id, String proprietario) {
+    public Conversazione trova(UUID id, String proprietario) {
         return conversazioni.findByIdAndProprietario(id, proprietario)
                 .orElseThrow(() -> new ConversazioneNonTrovataException(id));
     }
