@@ -45,5 +45,13 @@ function statoDa(grezzo: string): StatoRisposta {
       // l'ultima riga può essere ancora a metà: arriverà intera al prossimo evento
     }
   }
+  stato.testo = normalizzaCitazioni(stato.testo); 
   return stato;
+}
+
+const CITAZIONE = /[\[【]+\s*Fonte\s*(\d+)\s*[\]】]+/g;
+
+/** 【Fonte 2】, [[Fonte 2]], [Fonte 2] con spazi speciali → [Fonte 2] */
+export function normalizzaCitazioni(testo: string): string {
+  return testo.replace(CITAZIONE, '[Fonte $1]');
 }
