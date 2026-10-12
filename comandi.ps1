@@ -40,3 +40,9 @@ function Chiedi($testo, $documentoId) {
   "Tempo: {0:N1} s" -f $orologio.Elapsed.TotalSeconds
   $dati.fonti | Format-Table
 }
+
+function Assistente($testo) {
+  $dati = Api POST /api/assistente @{ domanda = $testo }
+  if ($dati -is [string]) { $dati; return }
+  "`n$($dati.risposta)`n"
+}
