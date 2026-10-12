@@ -42,6 +42,9 @@ public class StrumentiModifica {
         if (nuovoNome == null || nuovoNome.isBlank() || nuovoNome.length() > NOME_MASSIMO) {
             return "Nome non valido: deve avere da 1 a " + NOME_MASSIMO + " caratteri.";
         }
+        if (!nuovoNome.strip().toLowerCase().endsWith(".pdf")) {          // ← nuovo
+            return "Nome non valido: deve terminare con .pdf.";
+        }
         UUID id;
         try {
             id = UUID.fromString(documentoId);
