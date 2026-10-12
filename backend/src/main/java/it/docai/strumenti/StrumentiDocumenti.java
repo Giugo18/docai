@@ -24,9 +24,9 @@ public class StrumentiDocumenti {
     }
 
     /** Quello che il modello vede di un documento: niente id interni, niente contenuto. */
-    public record DocumentoInBreve(String nomeFile, String stato, Instant caricatoIl) {
+    public record DocumentoInBreve(String id, String nomeFile, String stato, Instant caricatoIl) {
         static DocumentoInBreve da(DocumentoDto d) {
-            return new DocumentoInBreve(d.nomeFile(), d.stato().toString(), d.caricatoIl());
+            return new DocumentoInBreve(d.id().toString(), d.nomeFile(), d.stato().toString(), d.caricatoIl());
         }
     }
 

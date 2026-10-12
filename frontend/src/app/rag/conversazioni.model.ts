@@ -1,4 +1,7 @@
-import { Fonte } from './rag.model';
+import { Fonte, Proposta } from './rag.model';
+
+export type EsitoProposta = 'in attesa' | 'in corso' | 'confermata' | 'annullata' | 'errore';
+export type PropostaVista = Proposta & { esito: EsitoProposta };
 
 export interface ConversazioneDto {
   id: string;
@@ -26,4 +29,5 @@ export interface MessaggioVista {
   fonti: Fonte[];
   riscritta: string | null;
   inCorso: boolean;
+  proposte: PropostaVista[];
 }

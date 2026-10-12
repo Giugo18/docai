@@ -3,9 +3,10 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { map, of, Subscription, switchMap, tap } from 'rxjs';
 import { ConversazioniApi } from '../conversazioni-api';
-import { ConversazioneDto, MessaggioVista } from '../conversazioni.model';
+import { ConversazioneDto, EsitoProposta, MessaggioVista, PropostaVista } from '../conversazioni.model';
 import { messaggioErrore } from '../../errori/problem-detail';
 import { MarkdownPipe } from '../markdown.pipe';
+import { DocumentiApi } from '../../documenti/documenti-api';
 
 @Component({
   selector: 'app-conversazioni',
@@ -26,6 +27,7 @@ export class Conversazioni implements OnInit, OnDestroy {
   protected readonly inCorso = signal(false);
   protected readonly errore = signal('');
   private richiesta?: Subscription;
+  private readonly documenti = inject(DocumentiApi);
 
   ngOnInit() {
     this.caricaElenco();
@@ -48,7 +50,7 @@ export class Conversazioni implements OnInit, OnDestroy {
     this.attiva.set(id);
     this.api.apri(id).subscribe({
       next: d => this.messaggi.set(d.messaggi.map(m => ({
-        ruolo: m.ruolo, testo: m.testo, fonti: m.fonti, riscritta: null, inCorso: false,
+        ruolo: m.ruolo, testo: m.testo, fonti: m.fonti, riscritta: null, inCorso: false, proposte: []
       }))),
       error: e => this.errore.set(messaggioErrore(e, 'Conversazione non disponibile')),
     });
@@ -87,8 +89,8 @@ export class Conversazioni implements OnInit, OnDestroy {
     this.errore.set('');
     this.inCorso.set(true);
     this.messaggi.update(lista => [...lista,
-    { ruolo: 'UTENTE', testo, fonti: [], riscritta: null, inCorso: false },
-    { ruolo: 'ASSISTENTE', testo: '', fonti: [], riscritta: null, inCorso: true },
+    { ruolo: 'UTENTE', testo, fonti: [], riscritta: null, inCorso: false, proposte: [] },
+    { ruolo: 'ASSISTENTE', testo: '', fonti: [], riscritta: null, inCorso: true, proposte: [] },
     ]);
 
     // conversazione già aperta → la uso; altrimenti la creo, con la domanda come titolo
@@ -101,7 +103,10 @@ export class Conversazioni implements OnInit, OnDestroy {
     this.richiesta = idConversazione$
       .pipe(switchMap(id => this.api.chiedi(id, testo)))
       .subscribe({
-        next: stato => this.aggiornaUltimo({ testo: stato.testo, fonti: stato.fonti, riscritta: stato.riscritta }),
+                next: stato => this.aggiornaUltimo({
+          testo: stato.testo, fonti: stato.fonti, riscritta: stato.riscritta,
+          proposte: stato.proposte.map(p => ({ ...p, esito: 'in attesa' as EsitoProposta })),
+        }),
         error: e => {
           this.errore.set(messaggioErrore(e, 'Domanda non riuscita'));
           this.aggiornaUltimo({ inCorso: false });
@@ -113,6 +118,33 @@ export class Conversazioni implements OnInit, OnDestroy {
           this.caricaElenco();       // la conversazione sale in cima all'elenco
         },
       });
+  }
+
+    conferma(indice: number, p: PropostaVista) {
+    this.segnaEsito(indice, p, 'in corso');
+    this.documenti.rinomina(p.documentoId, p.nuovoNome).subscribe({
+      next: () => {
+        this.segnaEsito(indice, p, 'confermata');
+        this.documenti.aggiorna();          // l'elenco Documenti mostra subito il nome nuovo
+      },
+      error: e => {
+        this.errore.set(messaggioErrore(e, 'Rinomina non riuscita'));
+        this.segnaEsito(indice, p, 'errore');
+      },
+    });
+  }
+
+  annulla(indice: number, p: PropostaVista) {
+    this.segnaEsito(indice, p, 'annullata');
+  }
+
+  /** Cambia l'esito di una proposta senza mutare gli oggetti: nuove liste e nuovi oggetti. */
+  private segnaEsito(indice: number, p: PropostaVista, esito: EsitoProposta) {
+    this.messaggi.update(lista => lista.map((m, i) => i !== indice ? m : {
+      ...m,
+            proposte: m.proposte.map(x =>
+        x.documentoId === p.documentoId && x.nuovoNome === p.nuovoNome ? { ...x, esito } : x),
+    }));
   }
 
   private caricaElenco() {

@@ -33,7 +33,7 @@
     </h2>
 
     <div class="flex-1 space-y-4">
-      @for (m of messaggi(); track $index) {
+      @for (m of messaggi(); track $index; let im = $index) {
       @if (m.ruolo === 'UTENTE') {
       <div class="ml-auto w-fit max-w-[80%] rounded-lg bg-blue-600 px-3 py-2 text-sm text-white">{{ m.testo }}</div>
       } @else {
@@ -66,6 +66,25 @@
             }
           </ul>
         </details>
+        }
+        @for (p of m.proposte; track $index) {
+        <div class="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
+          <p>Rinominare <strong>{{ p.nomeAttuale }}</strong> in <strong>{{ p.nuovoNome }}</strong>?</p>
+          @switch (p.esito) {
+          @case ('in attesa') {
+          <div class="mt-2 flex gap-2">
+            <button type="button" (click)="conferma(im, p)" [disabled]="m.inCorso"
+              class="rounded bg-green-600 px-3 py-1 text-white hover:bg-green-700 disabled:opacity-60">Conferma</button>
+            <button type="button" (click)="annulla(im, p)"
+              class="rounded border border-gray-300 px-3 py-1 hover:bg-gray-100">Annulla</button>
+          </div>
+          }
+          @case ('in corso') { <p class="mt-2 text-gray-500">Rinomino…</p> }
+          @case ('confermata') { <p class="mt-2 text-green-700">✓ Documento rinominato</p> }
+          @case ('annullata') { <p class="mt-2 text-gray-500">Proposta annullata</p> }
+          @case ('errore') { <p class="mt-2 text-red-700">Rinomina non riuscita</p> }
+          }
+        </div>
         }
       </div>
       }

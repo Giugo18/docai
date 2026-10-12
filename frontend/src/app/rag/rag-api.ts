@@ -28,7 +28,7 @@ export function comeStato(eventi: Observable<HttpEvent<string>>): Observable<Sta
 
 /** Rilegge tutto il testo arrivato finora e ricostruisce fonti, risposta e domanda riscritta. */
 function statoDa(grezzo: string): StatoRisposta {
-  const stato: StatoRisposta = { fonti: [], testo: '', riscritta: null };
+const stato: StatoRisposta = { fonti: [], testo: '', riscritta: null, proposte: [] };
   for (const riga of grezzo.split('\n')) {
     if (!riga.startsWith('data:')) continue;
     try {
@@ -38,7 +38,9 @@ function statoDa(grezzo: string): StatoRisposta {
       } else if (evento.tipo === 'testo') {
         stato.testo += evento.testo ?? '';
       } else if (evento.tipo === 'riscritta') {
-        stato.riscritta = evento.testo;
+        stato.riscritta = evento.testo ?? null;
+      } else if (evento.tipo === 'proposta' && evento.proposta) {
+        stato.proposte.push(evento.proposta);
       }
       // altri tipi: ignorati
     } catch {

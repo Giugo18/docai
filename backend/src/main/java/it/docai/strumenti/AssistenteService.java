@@ -26,24 +26,26 @@ public class AssistenteService {
     private final String regole;
     private final StrumentiRicerca strumentiRicerca;   // nel costruttore, come strumentiDocumenti
     private final ConversazioneService conversazioni;
+    private final StrumentiModifica strumentiModifica;
 
     public AssistenteService(ChatClient chatClient, StrumentiDocumenti strumentiDocumenti,
                              @Value("classpath:prompts/strumenti.st") Resource prompt,
                              StrumentiRicerca strumentiRicerca,
-                             ConversazioneService conversazioni) throws IOException {
+                             ConversazioneService conversazioni, StrumentiModifica strumentiModifica) throws IOException {
         this.chatClient = chatClient;
         this.strumentiDocumenti = strumentiDocumenti;
         this.regole = prompt.getContentAsString(StandardCharsets.UTF_8);
         this.strumentiRicerca = strumentiRicerca;
         this.conversazioni = conversazioni;
+        this.strumentiModifica = strumentiModifica;
     }
 
     public String chiedi(String domanda, String proprietario) {
         String risposta = chatClient.prompt()
                 .system(regole)
                 .user(domanda)
-                .tools(strumentiDocumenti, strumentiRicerca)
-                .toolContext(ContestoStrumenti.di(proprietario, null, new ArrayList<>()))
+                .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
+                .toolContext(ContestoStrumenti.di(proprietario, null, new ArrayList<>(), new ArrayList<>()))
                 .call()
                 .content();
         return Citazioni.normalizza(risposta);
@@ -56,22 +58,25 @@ public class AssistenteService {
 
         var fonti = new CopyOnWriteArrayList<Fonte>();                             // la riempiono i tool
         var risposta = new StringBuilder();
+        var proposte = new CopyOnWriteArrayList<Proposta>();
 
         Flux<EventoRag> testo = chatClient.prompt()
                 .system(regole)
                 .messages(cronologia(storia))                                      // la conversazione finora
                 .user(domanda)
-                .tools(strumentiDocumenti, strumentiRicerca)
-                .toolContext(ContestoStrumenti.di(proprietario, c.getDocumentoId(), fonti))
+                .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
+                .toolContext(ContestoStrumenti.di(proprietario, c.getDocumentoId(), fonti, proposte))
                 .stream()
                 .content()
                 .doOnNext(risposta::append)
                 .map(EventoRag::testo);
 
-        Flux<EventoRag> fine = Flux.defer(() -> {                                  // eseguito solo DOPO il testo
+        Flux<EventoRag> fine = Flux.defer(() -> {
             String completa = Citazioni.normalizza(risposta.toString());
             conversazioni.registraRisposta(c.getId(), completa, List.copyOf(fonti));
-            return Flux.just(EventoRag.fonti(List.copyOf(fonti)));
+            return Flux.concat(
+                    Flux.just(EventoRag.fonti(List.copyOf(fonti))),
+                    Flux.fromIterable(List.copyOf(proposte)).map(EventoRag::proposta));
         });
 
         return Flux.concat(testo, fine);

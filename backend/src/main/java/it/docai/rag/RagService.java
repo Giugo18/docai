@@ -122,7 +122,7 @@ public class RagService {
         Optional<Contesto> contesto = prepara(autonoma, c.getDocumentoId(), proprietario);
         if (contesto.isEmpty()) {
             conversazioneService.registraRisposta(c.getId(), NIENTE, List.of());
-            return Flux.just(EventoRag.riscritta(autonoma), EventoRag.fonti(List.of()), EventoRag.testo(NIENTE));
+            return Flux.just(EventoRag.riscritta(autonoma), EventoRag.fonti(List.of()), EventoRag.testo(NIENTE), null);
         }
 
         Contesto ctx = contesto.get();
@@ -139,7 +139,7 @@ public class RagService {
                         conversazioneService.registraRisposta(c.getId(), Citazioni.normalizza(risposta.toString()), ctx.fonti()))
                 .map(EventoRag::testo);
 
-        return Flux.concat(Flux.just(EventoRag.riscritta(autonoma), EventoRag.fonti(ctx.fonti())), testo);
+        return Flux.concat(Flux.just(EventoRag.riscritta(autonoma), EventoRag.fonti(ctx.fonti())), testo, null);
     }
 
     private String riscrivi(List<Messaggio> storia, String domanda) {

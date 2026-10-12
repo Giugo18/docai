@@ -1,6 +1,7 @@
 package it.docai.strumenti;
 
 import it.docai.rag.Fonte;
+import it.docai.rag.Proposta;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ final class ContestoStrumenti {
     static final String PROPRIETARIO = "proprietario";
     static final String DOCUMENTO = "documentoId";
     static final String FONTI = "fonti";
+    static final String PROPOSTE = "proposte";
 
     private ContestoStrumenti() {
     }
@@ -23,6 +25,18 @@ final class ContestoStrumenti {
         contesto.put(FONTI, fonti);
         if (documentoId != null) {
             contesto.put(DOCUMENTO, documentoId);           // conversazione legata a un documento
+        }
+        return contesto;
+    }
+
+    static Map<String, Object> di(String proprietario, UUID documentoId,
+                                  List<Fonte> fonti, List<Proposta> proposte) {
+        var contesto = new HashMap<String, Object>();
+        contesto.put(PROPRIETARIO, proprietario);
+        contesto.put(FONTI, fonti);
+        contesto.put(PROPOSTE, proposte);
+        if (documentoId != null) {
+            contesto.put(DOCUMENTO, documentoId);
         }
         return contesto;
     }
