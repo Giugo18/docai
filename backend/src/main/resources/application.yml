@@ -54,6 +54,11 @@ spring:
         dimensions: 768
         distance-type: COSINE_DISTANCE
         index-type: HNSW
+    mcp:
+      server:
+        name: docai
+        version: 0.1.0
+        protocol: STREAMABLE      # endpoint predefinito: /mcp
 #          model: llama3.2
 #      embedding:
 #        options:
