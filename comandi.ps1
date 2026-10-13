@@ -1,3 +1,16 @@
+# comandi.ps1 – funzioni di comodo per provare DocAI da PowerShell.
+# Il file contiene SOLO definizioni di funzioni: caricarlo non esegue niente.
+#
+# Uso, nella console (una volta per sessione):
+#   . .\comandi.ps1
+#   $env:DOCAI_PWD = Read-Host "Password di mario"
+#   NuovoToken                         # token di mario, aggiorna $token e lo copia negli appunti
+#   NuovoToken anna                    # token di anna (chiede la password)
+#   NuovoToken mario admin-cli         # token NON destinato a DocAI: Api deve dare 401
+#   Api GET /api/documenti | Format-Table
+#   Chiedi "domanda" [documentoId]
+#   Assistente "domanda"
+
 function NuovoToken($utente = 'mario', $client = 'docai-frontend') {
   # password: da $env:DOCAI_PWD per mario, altrimenti la chiede (mai scritta nel file)
   if ($utente -eq 'mario' -and $env:DOCAI_PWD) { $password = $env:DOCAI_PWD }
@@ -22,11 +35,6 @@ function Decodifica($jwt) {
   switch ($p.Length % 4) { 2 { $p += '==' } 3 { $p += '=' } }
   [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p)) | ConvertFrom-Json
 }
-
-$env:DOCAI_PWD = Read-Host "Password di mario"   # una volta per sessione
-. .\comandi.ps1
-NuovoToken
-Api GET /api/documenti | Format-Table
 
 function Api($metodo, $percorso, $corpo) {
   $parametri = @{
