@@ -1,5 +1,6 @@
 package it.docai.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,7 +21,8 @@ import java.util.Map;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())   // API stateless con JWT: niente sessioni né cookie
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -28,7 +30,16 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(convertitoreKeycloak())));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(convertitoreKeycloak()))
+                        // RFC 9728: /.well-known/oauth-protected-resource dice ai client
+                        // quale authorization server rilascia i token per DocAI
+                        .protectedResourceMetadata(metadati -> metadati
+                                .protectedResourceMetadataCustomizer(m -> m
+                                        .authorizationServer(issuer)
+                                        .scope("openid")
+                                        .scope("profile")
+                                        .scope("email")
+                                        .tlsClientCertificateBoundAccessTokens(false))));
         return http.build();
     }
 
