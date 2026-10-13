@@ -33,7 +33,7 @@ public class StrumentiRicerca {
 
     @Tool(description = """
             Cerca nel contenuto dei documenti dell'utente i passaggi più pertinenti \
-            (ricerca semantica e per parole). Restituisce fino a 5 passaggi con numero di fonte, \
+            (ricerca semantica e per parole). Restituisce fino a 4 passaggi con numero di fonte, \
             nome del file, pagina e testo. Usalo per domande su cosa c'è scritto nei documenti: \
             importi, nomi, date, definizioni, spiegazioni.""")
     @SuppressWarnings("unchecked")
@@ -47,16 +47,28 @@ public class StrumentiRicerca {
         log.info("Tool cercaNeiDocumenti '{}' per {}", domanda, proprietario);
 
         var passaggi = new ArrayList<Passaggio>();
-        for (Document d : ricerca.cerca(domanda, documentoId, proprietario, PASSAGGI, SOGLIA)) {
+        for (Document d : cerca(domanda, documentoId, proprietario)) {
             var m = d.getMetadata();
             int numero = raccolte.size() + 1;                                      // numerazione unica
-            String nomeFile = (String) m.get("nomeFile");
-            int pagina = ((Number) m.get("pagina")).intValue();
             String testo = d.getText();
-            raccolte.add(new Fonte(numero, (String) m.get("documentoId"), nomeFile, pagina,
-                    d.getScore(), testo.substring(0, Math.min(200, testo.length()))));
-            passaggi.add(new Passaggio(numero, nomeFile, pagina, tronca(testo, CARATTERI_PER_PASSAGGIO)));        }
+            raccolte.add(new Fonte(numero, (String) m.get("documentoId"), (String) m.get("nomeFile"),
+                    ((Number) m.get("pagina")).intValue(), d.getScore(),
+                    testo.substring(0, Math.min(200, testo.length()))));
+            passaggi.add(passaggio(numero, d));
+        }
         return passaggi;
+    }
+
+    /** Ricerca condivisa: la usano l'assistente (qui sotto) e il server MCP. */
+    public List<Document> cerca(String domanda, UUID documentoId, String proprietario) {
+        return ricerca.cerca(domanda, documentoId, proprietario, PASSAGGI, SOGLIA);
+    }
+
+    /** Il passaggio per il modello: testo troncato per restare nel budget di token. */
+    public static Passaggio passaggio(int numero, Document d) {
+        var m = d.getMetadata();
+        return new Passaggio(numero, (String) m.get("nomeFile"),
+                ((Number) m.get("pagina")).intValue(), tronca(d.getText(), CARATTERI_PER_PASSAGGIO));
     }
 
     static String tronca(String testo, int massimo) {
