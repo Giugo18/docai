@@ -1,12 +1,32 @@
-function NuovoToken {
+function NuovoToken($utente = 'mario', $client = 'docai-frontend') {
+  # password: da $env:DOCAI_PWD per mario, altrimenti la chiede (mai scritta nel file)
+  if ($utente -eq 'mario' -and $env:DOCAI_PWD) { $password = $env:DOCAI_PWD }
+  else { $password = Read-Host "Password di $utente" }
+
   $r = Invoke-RestMethod -Method Post -Uri http://localhost:8180/realms/docai/protocol/openid-connect/token -Body @{
-    client_id  = 'docai-frontend'
+    client_id  = $client
     grant_type = 'password'
-    username   = 'mario'
-    password   = 'mario'
+    username   = $utente
+    password   = $password
   }
-  return $r.access_token
+  $global:token = $r.access_token          # la usano Api, Chiedi e Assistente
+  $global:token | Set-Clipboard            # pronto da incollare (Inspector, ecc.)
+
+  $dati = Decodifica $global:token
+  "Token di $utente per $client, aud: $($dati.aud), scade alle " +
+    [DateTimeOffset]::FromUnixTimeSeconds($dati.exp).LocalDateTime.ToString('HH:mm:ss')
 }
+
+function Decodifica($jwt) {
+  $p = $jwt.Split('.')[1].Replace('-','+').Replace('_','/')
+  switch ($p.Length % 4) { 2 { $p += '==' } 3 { $p += '=' } }
+  [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p)) | ConvertFrom-Json
+}
+
+$env:DOCAI_PWD = Read-Host "Password di mario"   # una volta per sessione
+. .\comandi.ps1
+NuovoToken
+Api GET /api/documenti | Format-Table
 
 function Api($metodo, $percorso, $corpo) {
   $parametri = @{
