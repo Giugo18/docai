@@ -1,8 +1,8 @@
 {
   "realm": "docai",
   "enabled": true,
-  "displayName": "DocAI",
-  "displayNameHtml": "DocAI",
+  "displayName": "Leggio18",
+  "displayNameHtml": "Leggio18",
   "loginTheme": "docai",
   "internationalizationEnabled": true,
   "supportedLocales": ["it", "en"],

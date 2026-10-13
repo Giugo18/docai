@@ -1,27 +1,34 @@
 :root {
-  /* colore principale di PatternFly = blue-600 / blue-700 di Tailwind */
-  --pf-v5-global--primary-color--100: #2563eb;
-  --pf-v5-global--primary-color--200: #1d4ed8;
-  --pf-v5-global--link--Color: #2563eb;
-  --pf-v5-global--link--Color--hover: #1d4ed8;
-  --keycloak-card-top-color: #2563eb;
+  /* Leggio18: blu inchiostro + accento ambra */
+  --pf-v5-global--primary-color--100: #1E3A5F;
+  --pf-v5-global--primary-color--200: #16304F;
+  --pf-v5-global--link--Color: #1E3A5F;
+  --pf-v5-global--link--Color--hover: #16304F;
+  --keycloak-card-top-color: #E09F3E;      /* la riga ambra in cima alla scheda */
   --keycloak-bg-logo-url: none;            /* via lo sfondo con il logo Keycloak */
 }
 
 .login-pf body {
-  background: #f8fafc;                     /* slate-50, come l'app */
+  background: #F6F7F9;
 }
 
+/* Il logo al posto del testo. Il testo "Leggio18" resta nella pagina per i
+   lettori di schermo, ma a video ha dimensione 0. */
 #kc-header-wrapper {
-  text-transform: none;
-  letter-spacing: normal;
-  font-weight: 800;
-  font-size: 2.25rem;
-  color: #2563eb !important;
+  font-size: 0;
+  color: transparent !important;
+}
+#kc-header-wrapper::before {
+  content: "";
+  display: block;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  background: url("../img/logo.svg") center / contain no-repeat;
 }
 
 .pf-v5-c-login__main {                     /* la scheda del form */
-  border: 1px solid #e2e8f0;               /* slate-200 */
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
   box-shadow: none;
 }
@@ -32,4 +39,25 @@
 
 .pf-v5-c-form-control {
   overflow: hidden;
+}
+
+/* Tema scuro: Keycloak mette la classe pf-v5-theme-dark sull'<html>
+   quando il realm ha darkMode attivo e il sistema dell'utente è scuro.
+   Lo attiviamo per davvero nel passo sul tema scuro. */
+.pf-v5-theme-dark {
+  --pf-v5-global--primary-color--100: #E09F3E;
+  --pf-v5-global--primary-color--200: #C98A2C;
+  --pf-v5-global--link--Color: #E09F3E;
+  --pf-v5-global--link--Color--hover: #F0B85F;
+  --pf-v5-c-button--m-primary--Color: #0E1726;     /* testo scuro sul pulsante ambra */
+}
+.pf-v5-theme-dark.login-pf body,
+.pf-v5-theme-dark .login-pf body {
+  background: #0E1726;
+}
+.pf-v5-theme-dark .pf-v5-c-login__main {
+  border-color: #24344F;
+}
+.pf-v5-theme-dark #kc-header-wrapper::before {
+  background-image: url("../img/logo-scuro.svg");
 }
