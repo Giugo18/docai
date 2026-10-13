@@ -7,6 +7,7 @@ import it.docai.estrazione.ContenutoNonDisponibileException;
 import it.docai.estrazione.DocumentoTroppoLungoException;
 import it.docai.estrazione.TestoNonEstraibileException;
 import it.docai.rag.ConversazioneNonTrovataException;
+import it.docai.strumenti.ModelloOccupatoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
@@ -120,5 +121,14 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         problema.setTitle("Conversazione non trovata");
         problema.setType(URI.create("https://docai.it/errori/conversazione-non-trovata"));
         return problema;
+    }
+
+    @ExceptionHandler(ModelloOccupatoException.class)
+    ProblemDetail modelloOccupato(ModelloOccupatoException e) {
+        var pd = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
+                "L'assistente ha raggiunto il limite di richieste: riprova tra un minuto, "
+                        + "oppure apri una nuova conversazione.");
+        pd.setTitle("Assistente occupato");
+        return pd;
     }
 }

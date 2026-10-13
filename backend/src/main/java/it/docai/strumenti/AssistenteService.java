@@ -12,10 +12,7 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -27,6 +24,8 @@ public class AssistenteService {
     private final StrumentiRicerca strumentiRicerca;   // nel costruttore, come strumentiDocumenti
     private final ConversazioneService conversazioni;
     private final StrumentiModifica strumentiModifica;
+    private static final int MESSAGGI_STORIA = 4;
+    private static final int CARATTERI_RISPOSTA_STORIA = 600;
 
     public AssistenteService(ChatClient chatClient, StrumentiDocumenti strumentiDocumenti,
                              @Value("classpath:prompts/strumenti.st") Resource prompt,
@@ -41,20 +40,24 @@ public class AssistenteService {
     }
 
     public String chiedi(String domanda, String proprietario) {
-        String risposta = chatClient.prompt()
-                .system(regole)
-                .user(domanda)
-                .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
-                .toolContext(ContestoStrumenti.di(proprietario, null, new ArrayList<>(), new ArrayList<>()))
-                .call()
-                .content();
-        return Citazioni.normalizza(risposta);
+        try {
+            String risposta = chatClient.prompt()
+                    .system(regole)
+                    .user(domanda)
+                    .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
+                    .toolContext(ContestoStrumenti.di(proprietario, null, new ArrayList<>(), new ArrayList<>()))
+                    .call()
+                    .content();
+            return Citazioni.normalizza(risposta);
+        } catch (RuntimeException e) {
+            throw (RuntimeException) ModelloOccupatoException.traduci(e);
+        }
     }
 
     public Flux<EventoRag> rispondiInConversazione(UUID conversazioneId, String domanda, String proprietario) {
         Conversazione c = conversazioni.trova(conversazioneId, proprietario);      // 404 se non è mia
         List<Messaggio> storia = conversazioni.ultimi(c.getId());                  // PRIMA di salvare la nuova
-        conversazioni.registraDomanda(c.getId(), domanda);
+        //conversazioni.registraDomanda(c.getId(), domanda);
 
         var fonti = new CopyOnWriteArrayList<Fonte>();                             // la riempiono i tool
         var risposta = new StringBuilder();
@@ -69,10 +72,12 @@ public class AssistenteService {
                 .stream()
                 .content()
                 .doOnNext(risposta::append)
-                .map(EventoRag::testo);
+                .map(EventoRag::testo)
+                .onErrorMap(ModelloOccupatoException::traduci);
 
         Flux<EventoRag> fine = Flux.defer(() -> {
             String completa = Citazioni.normalizza(risposta.toString());
+            conversazioni.registraDomanda(c.getId(), domanda);  // ← spostata qui
             conversazioni.registraRisposta(c.getId(), completa, List.copyOf(fonti));
             return Flux.concat(
                     Flux.just(EventoRag.fonti(List.copyOf(fonti))),
@@ -83,10 +88,14 @@ public class AssistenteService {
     }
 
     private static List<Message> cronologia(List<Messaggio> storia) {
-        return storia.stream()
+        var inOrdine = storia.stream()
+                .sorted(Comparator.comparing(Messaggio::getCreatoIl))     // dal più vecchio al più recente
+                .toList();
+        return inOrdine.stream()
+                .skip(Math.max(0, inOrdine.size() - MESSAGGI_STORIA))      // solo gli ultimi
                 .<Message>map(m -> m.getRuolo() == RuoloMessaggio.UTENTE
                         ? new UserMessage(m.getTesto())
-                        : new AssistantMessage(m.getTesto()))
+                        : new AssistantMessage(StrumentiRicerca.tronca(m.getTesto(), CARATTERI_RISPOSTA_STORIA)))
                 .toList();
     }
 }

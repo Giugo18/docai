@@ -38,8 +38,10 @@ spring:
       base-url: https://api.groq.com/openai/v1
       chat:
         model: ${GROQ_MODEL:openai/gpt-oss-120b}
+        max-completion-tokens: 2048
         extra-body:
           include_reasoning: false
+          reasoning_effort: low
     ollama:
       base-url: ${OLLAMA_URL:http://localhost:11434}
       chat:

@@ -19,9 +19,9 @@ import java.util.UUID;
 public class StrumentiRicerca {
 
     private static final Logger log = LoggerFactory.getLogger(StrumentiRicerca.class);
-    private static final int PASSAGGI = 5;
+    private static final int PASSAGGI = 4;
     private static final double SOGLIA = 0.3;
-
+    private static final int CARATTERI_PER_PASSAGGIO = 1_200;
     private final RicercaIbrida ricerca;
 
     public StrumentiRicerca(RicercaIbrida ricerca) {
@@ -55,8 +55,11 @@ public class StrumentiRicerca {
             String testo = d.getText();
             raccolte.add(new Fonte(numero, (String) m.get("documentoId"), nomeFile, pagina,
                     d.getScore(), testo.substring(0, Math.min(200, testo.length()))));
-            passaggi.add(new Passaggio(numero, nomeFile, pagina, testo));
-        }
+            passaggi.add(new Passaggio(numero, nomeFile, pagina, tronca(testo, CARATTERI_PER_PASSAGGIO)));        }
         return passaggi;
+    }
+
+    static String tronca(String testo, int massimo) {
+        return testo.length() <= massimo ? testo : testo.substring(0, massimo) + "…";
     }
 }

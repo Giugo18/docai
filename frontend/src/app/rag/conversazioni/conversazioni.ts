@@ -107,9 +107,14 @@ export class Conversazioni implements OnInit, OnDestroy {
           testo: stato.testo, fonti: stato.fonti, riscritta: stato.riscritta,
           proposte: stato.proposte.map(p => ({ ...p, esito: 'in attesa' as EsitoProposta })),
         }),
-        error: e => {
+                error: e => {
           this.errore.set(messaggioErrore(e, 'Domanda non riuscita'));
-          this.aggiornaUltimo({ inCorso: false });
+          this.messaggi.update(lista => {
+            const ultimo = lista.at(-1);
+            return ultimo && !ultimo.testo
+              ? lista.slice(0, -1)                                     // risposta vuota: la tolgo
+              : [...lista.slice(0, -1), { ...ultimo!, inCorso: false }]; // risposta a metà: la tengo
+          });
           this.inCorso.set(false);
         },
         complete: () => {

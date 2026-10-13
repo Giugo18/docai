@@ -12,7 +12,12 @@ export interface ProblemDetail {
 // Restituisce il messaggio del backend, oppure un testo di riserva
 export function messaggioErrore(errore: unknown, predefinito: string): string {
   if (errore instanceof HttpErrorResponse) {
-    const problema = errore.error as ProblemDetail | null;
+    let corpo: unknown = errore.error;
+    // con responseType 'text' il ProblemDetail arriva come stringa JSON
+    if (typeof corpo === 'string') {
+      try { corpo = JSON.parse(corpo); } catch { /* non era JSON: resta stringa */ }
+    }
+    const problema = corpo as ProblemDetail | null;
     if (problema?.detail) {
       return problema.detail;
     }
