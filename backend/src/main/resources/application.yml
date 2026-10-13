@@ -23,6 +23,7 @@ spring:
           issuer-uri: ${ISSUER_URI:http://localhost:8180/realms/docai}
           # Validazione delle firme JWT con le chiavi pubbliche di Keycloak
           jwk-set-uri: ${JWK_SET_URI:http://localhost:8180/realms/docai/protocol/openid-connect/certs}
+          audiences: docai-api
 
 # ===== Settimana 6+: decommenta e verifica i nomi delle proprietà sulla documentazione di Spring AI 2.0 =====
   ai:
