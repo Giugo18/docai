@@ -89,4 +89,10 @@ logging:
 docai:
   valutazione:
     attiva: ${VALUTAZIONE_ATTIVA:true}
+  prezzi:
+    valuta: USD
+    modelli:
+      "[openai/gpt-oss-120b]": # le parentesi quadre servono per la chiave con lo "/"
+        ingresso: 0.15             # dollari per milione di token
+        uscita: 0.60
 

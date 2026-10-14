@@ -34,11 +34,17 @@ class ConsumoObservationHandler implements ObservationHandler<ChatModelObservati
         // chi: dal ToolContext (vale anche in streaming, su altri thread), altrimenti dal JWT della richiesta
         String proprietario = tool.get(ContestoStrumenti.PROPRIETARIO) instanceof String p ? p : utenteCorrente();
         String operazione = tool.get(ConsumoService.CHIAVE_OPERAZIONE) instanceof String o ? o : "CHAT";
-        consumi.registra(proprietario, operazione, contesto.getResponse());
-    }
+        consumi.registra(proprietario, nomeUtente(), operazione, contesto.getResponse());    }
 
     private static String utenteCorrente() {
         Authentication a = SecurityContextHolder.getContext().getAuthentication();
         return a instanceof JwtAuthenticationToken jwt ? jwt.getToken().getSubject() : null;
+    }
+
+    /** preferred_username dal JWT, se la chiamata parte dal thread della richiesta; altrimenti null. */
+    private static String nomeUtente() {
+        return SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken jwt
+                ? jwt.getToken().getClaimAsString("preferred_username")
+                : null;
     }
 }

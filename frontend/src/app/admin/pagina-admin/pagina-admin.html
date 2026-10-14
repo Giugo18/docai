@@ -26,3 +26,77 @@
     <p class="p-4 text-sm text-slate-500 dark:text-slate-400">Caricamento…</p>
   }
 </section>
+
+<section class="mt-6 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+  <div class="flex flex-wrap items-center justify-between gap-3 px-4 pt-4">
+    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Consumi del modello</h2>
+    <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+      Mese
+      <input type="month" [value]="mese()" (change)="cambiaMese($any($event.target).value)"
+             class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-slate-900
+                    dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:[color-scheme:dark]">
+    </label>
+  </div>
+
+  @if (consumi(); as c) {
+    @if (c.righe.length === 0) {
+      <p class="p-4 text-sm text-slate-500 dark:text-slate-400">Nessun consumo in questo mese.</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="mt-2 w-full text-left text-sm">
+          <thead class="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <tr>
+              <th class="px-4 py-3 font-medium">Utente</th>
+              <th class="px-4 py-3 font-medium">Operazione</th>
+              <th class="px-4 py-3 text-right font-medium">Chiamate</th>
+              <th class="px-4 py-3 text-right font-medium">Token in</th>
+              <th class="px-4 py-3 text-right font-medium">Token out</th>
+              <th class="px-4 py-3 text-right font-medium">Costo stimato</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-900 dark:divide-slate-800 dark:text-slate-100">
+            @for (g of gruppi(); track g.proprietario) {
+              @for (r of g.righe; track r.operazione + r.modello; let primo = $first) {
+                <tr>
+                  @if (primo) {
+                    <td [attr.rowspan]="g.righe.length" class="px-4 py-3 align-top">
+                      <div class="font-medium">{{ g.utente }}</div>
+                      <div class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                        {{ g.costo | currency: c.valuta : 'symbol' : '1.4-4' }}
+                      </div>
+                    </td>
+                  }
+                  <td class="px-4 py-3">
+                    <span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700
+                                 dark:bg-slate-800 dark:text-slate-300">{{ r.operazione }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-right tabular-nums">{{ r.chiamate }}</td>
+                  <td class="px-4 py-3 text-right tabular-nums">{{ r.tokenIn | number }}</td>
+                  <td class="px-4 py-3 text-right tabular-nums">{{ r.tokenOut | number }}</td>
+                  <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">
+                    {{ r.costoStimato | currency: c.valuta : 'symbol' : '1.4-4' }}
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+          <tfoot class="border-t border-slate-200 font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
+            <tr>
+              <td colspan="5" class="px-4 py-3">Totale {{ c.mese }}</td>
+              <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">
+                {{ c.totale | currency: c.valuta : 'symbol' : '1.4-4' }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="px-4 pb-4 pt-2 text-xs text-slate-500 dark:text-slate-400">
+        Costo stimato con i prezzi per milione di token in <code>application.yml</code>. Sul piano gratuito di Groq non si paga.
+      </p>
+    }
+  } @else if (erroreConsumi()) {
+    <p class="m-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">{{ erroreConsumi() }}</p>
+  } @else {
+    <p class="p-4 text-sm text-slate-500 dark:text-slate-400">Caricamento…</p>
+  }
+</section>
