@@ -2,9 +2,25 @@ package it.docai.rag;
 
 import java.util.List;
 
-public record CasoDiProva(String domanda, String documento, List<String> paroleAttese, Boolean nonDeveTrovare) {
+public record CasoDiProva(String domanda, String documento, List<String> paroleAttese, Boolean nonDeveTrovare,
+                          Modalita modalita, String utente, List<String> almenoUna, List<String> nonDeveContenere) {
+
+    public enum Modalita { RAG, ASSISTENTE }
+
     public CasoDiProva {
         paroleAttese = paroleAttese == null ? List.of() : paroleAttese;
         nonDeveTrovare = nonDeveTrovare != null && nonDeveTrovare;     // assente nel JSON = false
+        modalita = modalita == null ? Modalita.RAG : modalita;         // i 12 casi vecchi restano RAG
+        almenoUna = almenoUna == null ? List.of() : almenoUna;
+        nonDeveContenere = nonDeveContenere == null ? List.of() : nonDeveContenere;
+    }
+
+    public boolean utenteVuoto() {
+        return "vuoto".equals(utente);
+    }
+
+    /** Domanda con il percorso e l'utente, per distinguere i casi con lo stesso testo. */
+    public String etichetta() {
+        return (modalita == Modalita.RAG ? "" : "[" + modalita + "] ") + (utenteVuoto() ? "[vuoto] " : "") + domanda;
     }
 }

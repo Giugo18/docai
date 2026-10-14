@@ -1,5 +1,6 @@
 package it.docai.rag;
 
+import it.docai.strumenti.AssistenteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,13 +26,17 @@ public class Valutazione {
     private final RagService rag;
     private final List<CasoDiProva> casi;
     private final Duration pausa;
+    private static final String UTENTE_VUOTO = "valutazione-utente-vuoto";   // nessun documento ha questo proprietario
+    private final AssistenteService assistente;
 
     public Valutazione(RagService rag, JsonMapper json,
                        @Value("classpath:valutazione/domande.json") Resource file,
-                       @Value("${docai.valutazione.pausa:4s}") Duration pausa) throws IOException {
+                       @Value("${docai.valutazione.pausa:4s}") Duration pausa,
+                       AssistenteService assistente) throws IOException {
         this.rag = rag;
         this.pausa = pausa;
         this.casi = json.readValue(file.getInputStream(), new TypeReference<List<CasoDiProva>>() {});
+        this.assistente = assistente;
         log.info("Valutazione attiva: {} casi di prova caricati, pausa {} tra un caso e l'altro", casi.size(), pausa);
     }
 
@@ -44,35 +49,33 @@ public class Valutazione {
             long inizio = System.currentTimeMillis();
             RispostaDocumenti r;
             try {
-                r = rag.chiedi(caso.domanda(), null, proprietario);   // su TUTTI i documenti
+                r = rispondi(caso, proprietario);
             } catch (RuntimeException e) {
                 long durata = System.currentTimeMillis() - inizio;
-                log.warn("Valutazione: {} | ERRORE {} | {} ms", caso.domanda(), e.getMessage(), durata);
-                esiti.add(EsitoCaso.errore(caso.domanda(), e.getMessage(), durata));
+                log.warn("Valutazione: {} | ERRORE {} | {} ms", caso.etichetta(), e.getMessage(), durata);
+                esiti.add(EsitoCaso.errore(caso.etichetta(), e.getMessage(), durata));
                 continue;
             }
             long durata = System.currentTimeMillis() - inizio;
 
-            //Integer posizione = null;
             Set<Integer> numeriDocumento = r.fonti().stream()
                     .filter(f -> f.nomeFile().equals(caso.documento()))
                     .map(Fonte::numero)
                     .collect(Collectors.toSet());
             Integer posizione = numeriDocumento.stream().min(Integer::compare).orElse(null);   // la migliore
 
-            boolean fonteTrovata = caso.nonDeveTrovare() || posizione != null;
-            boolean corretta = caso.nonDeveTrovare()
-                    ? normalizza(r.risposta()).contains("non trovo")
-                    : contieneTutte(r.risposta(), caso.paroleAttese());
+            boolean senzaFonte = caso.nonDeveTrovare() || caso.documento() == null;   // niente da trovare
+            boolean fonteTrovata = senzaFonte || posizione != null;
+            boolean corretta = corretta(caso, r.risposta());
 
             Set<Integer> citate = Citazioni.numeri(r.risposta());
             Set<Integer> inventate = Citazioni.inventate(r.risposta(), r.fonti().stream().map(Fonte::numero).toList());
-            boolean fonteCitata = caso.nonDeveTrovare() || citate.stream().anyMatch(numeriDocumento::contains);
+            boolean fonteCitata = senzaFonte || citate.stream().anyMatch(numeriDocumento::contains);
 
-            esiti.add(new EsitoCaso(caso.domanda(), fonteTrovata, posizione, fonteCitata, inventate,
+            esiti.add(new EsitoCaso(caso.etichetta(), fonteTrovata, posizione, fonteCitata, inventate,
                     corretta, durata, r.risposta()));
             log.info("Valutazione: {} | fonte={} pos={} citata={} inventate={} risposta={} | {} ms",
-                    caso.domanda(), fonteTrovata ? "OK" : "NO", posizione, fonteCitata ? "OK" : "NO",
+                    caso.etichetta(), fonteTrovata ? "OK" : "NO", posizione, fonteCitata ? "OK" : "NO",
                     inventate, corretta ? "OK" : "NO", durata);
         }
 
@@ -112,5 +115,23 @@ public class Valutazione {
                 .replaceAll("[\\u2018\\u2019]", "'")            // apostrofi tipografici → '
                 .replaceAll("[\\u201C\\u201D]", "\"")           // virgolette tipografiche → "
                 .replace('\u00A0', ' ');                        // spazio non separabile → spazio
+    }
+
+    private RispostaDocumenti rispondi(CasoDiProva caso, String proprietario) {
+        String chi = caso.utenteVuoto() ? UTENTE_VUOTO : proprietario;
+        return switch (caso.modalita()) {
+            case RAG -> rag.chiedi(caso.domanda(), null, chi);
+            case ASSISTENTE -> assistente.chiediConFonti(caso.domanda(), chi);
+        };
+    }
+
+    /** Tutte le paroleAttese, almeno una tra almenoUna, nessuna tra nonDeveContenere. */
+    private static boolean corretta(CasoDiProva caso, String risposta) {
+        String t = normalizza(risposta);
+        boolean ok = caso.nonDeveTrovare()
+                ? t.contains("non trovo")
+                : caso.paroleAttese().stream().allMatch(p -> t.contains(normalizza(p)))
+                && (caso.almenoUna().isEmpty() || caso.almenoUna().stream().anyMatch(p -> t.contains(normalizza(p))));
+        return ok && caso.nonDeveContenere().stream().noneMatch(p -> t.contains(normalizza(p)));
     }
 }

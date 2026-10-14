@@ -41,7 +41,13 @@ public class AssistenteService {
     }
 
     public String chiedi(String domanda, String proprietario) {
-        var contesto = ContestoStrumenti.di(proprietario, null, new ArrayList<>(), new ArrayList<>());
+        return chiediConFonti(domanda, proprietario).risposta();
+    }
+
+    /** Come chiedi, ma con le fonti raccolte dai tool: serve alla valutazione. */
+    public RispostaDocumenti chiediConFonti(String domanda, String proprietario) {
+        var fonti = new CopyOnWriteArrayList<Fonte>();
+        var contesto = ContestoStrumenti.di(proprietario, null, fonti, new ArrayList<Proposta>());
         contesto.put(ConsumoService.CHIAVE_OPERAZIONE, "ASSISTENTE");   // per il registro dei consumi
         try {
             String risposta = chatClient.prompt()
@@ -51,7 +57,7 @@ public class AssistenteService {
                     .toolContext(contesto)
                     .call()
                     .content();
-            return Citazioni.normalizza(risposta);
+            return new RispostaDocumenti(Citazioni.normalizza(risposta), List.copyOf(fonti));
         } catch (RuntimeException e) {
             throw (RuntimeException) ModelloOccupatoException.traduci(e);
         }

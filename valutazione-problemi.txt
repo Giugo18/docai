@@ -1,29 +1,8 @@
 ﻿
 
-domanda      : Che cos'è la roda nella capoeira?
-posizione    : 1
-fonteTrovata : True
-risposta     : Non trovo questa informazione nei tuoi documenti.
-
-domanda      : Dove trovo l'elenco dei verbi irregolari inglesi?
-posizione    : 1
-fonteTrovata : True
-risposta     : L’elenco dei verbi irregolari inglesi si trova nella sezione “Irregular Verbs” a pagina 41 della dispensa[Fonte 4].
-
-domanda      : Quale modello di embedding usa DocAI?
-posizione    : 
-fonteTrovata : False
-risposta     : DocAI utilizza il modello di embedding **bge‑m3**, eseguito in locale con Ollama[Fonte 1].
-
-domanda      : Su quale porta gira Keycloak in sviluppo?
-posizione    : 
-fonteTrovata : False
-risposta     : Keycloak gira sulla porta 8180 in ambiente di sviluppo[Fonte 1].
-
-domanda      : Che database usa DocAI?
-posizione    : 
-fonteTrovata : False
-risposta     : DocAI utilizza PostgreSQL come database, con l’estensione pgvector per la gestione dei vettori. [Fonte 2]
+domanda          : Che cos'è la roda nella capoeira?
+rispostaCorretta : False
+risposta         : Non trovo questa informazione nei tuoi documenti.
 
 
 
