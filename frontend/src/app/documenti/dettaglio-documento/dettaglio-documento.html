@@ -1,39 +1,41 @@
-<a routerLink="/documenti" class="text-sm text-slate-600 hover:text-blue-600">← Torna ai documenti</a>
+<a routerLink="/documenti"
+   class="text-sm text-slate-600 hover:text-inchiostro dark:text-slate-400 dark:hover:text-ambra">← Torna ai documenti</a>
 
 @if (documento(); as d) {
-<section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+<section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         @if (inModifica()) {
         <div class="flex-1">
             <input type="text" [value]="nuovoNome()" (input)="scrivi($event)" (keydown.enter)="salva()"
-                (keydown.escape)="annulla()"
-                class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-2 focus:outline-blue-600"
-                [class.border-red-500]="erroreNome()" [class.border-slate-300]="!erroreNome()" />
+                (keydown.escape)="annulla()" aria-label="Nuovo nome del file"
+                [attr.aria-invalid]="erroreNome() ? 'true' : null"
+                [attr.aria-describedby]="erroreNome() ? 'errore-nome' : null"
+                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-2 focus:outline-inchiostro aria-invalid:border-red-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:outline-ambra dark:aria-invalid:border-red-400" />
             @if (erroreNome()) {
-            <p class="mt-1 text-sm text-red-700">{{ erroreNome() }}</p>
+            <p id="errore-nome" class="mt-1 text-sm text-red-700 dark:text-red-400">{{ erroreNome() }}</p>
             }
             <div class="mt-3 flex gap-2">
                 <button type="button" (click)="salva()" [disabled]="salvataggio()"
-                    class="cursor-pointer rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+                    class="cursor-pointer rounded-lg bg-inchiostro px-3 py-1.5 text-sm font-medium text-white hover:bg-[#16304F] disabled:opacity-50 dark:bg-ambra dark:text-notte dark:hover:bg-[#F0B85F]">
                     {{ salvataggio() ? 'Salvataggio…' : 'Salva' }}
                 </button>
                 <button type="button" (click)="annulla()"
-                    class="cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                    class="cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
                     Annulla
                 </button>
             </div>
         </div>
         } @else {
         <div class="flex items-start gap-3">
-            <h2 class="break-all text-xl font-semibold">{{ d.nomeFile }}</h2>
+            <h2 class="break-all text-xl font-semibold text-slate-900 dark:text-slate-100">{{ d.nomeFile }}</h2>
             <div class="flex items-center gap-2">
                 <button type="button" (click)="modifica()"
-                    class="shrink-0 cursor-pointer rounded-lg border border-green-300 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50">
+                    class="shrink-0 cursor-pointer rounded-lg border border-green-300 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950/40">
                     Rinomina
                 </button>
 
                 <button type="button" (click)="elimina()" [disabled]="eliminazione()"
-                    class="shrink-0 cursor-pointer rounded-lg border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60">
+                    class="shrink-0 cursor-pointer rounded-lg border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40">
                     {{ eliminazione() ? 'Eliminazione…' : 'Elimina' }}
                 </button>
             </div>
@@ -46,30 +48,29 @@
 
     <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-            <dt class="text-sm text-slate-500">Dimensione</dt>
-            <dd class="mt-1 font-medium">{{ d.dimensione / 1048576 | number: '1.1-1' }} MB</dd>
+            <dt class="text-sm text-slate-500 dark:text-slate-400">Dimensione</dt>
+            <dd class="mt-1 font-medium text-slate-900 dark:text-slate-100">{{ d.dimensione / 1048576 | number: '1.1-1' }} MB</dd>
         </div>
         <div>
-            <dt class="text-sm text-slate-500">Caricato il</dt>
-            <dd class="mt-1 font-medium">{{ d.caricatoIl | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            <dt class="text-sm text-slate-500 dark:text-slate-400">Caricato il</dt>
+            <dd class="mt-1 font-medium text-slate-900 dark:text-slate-100">{{ d.caricatoIl | date: 'dd/MM/yyyy HH:mm' }}</dd>
         </div>
         <div class="sm:col-span-2">
-            <dt class="text-sm text-slate-500">ID</dt>
-            <dd class="mt-1 break-all font-mono text-sm text-slate-700">{{ d.id }}</dd>
+            <dt class="text-sm text-slate-500 dark:text-slate-400">ID</dt>
+            <dd class="mt-1 break-all font-mono text-sm text-slate-700 dark:text-slate-300">{{ d.id }}</dd>
         </div>
     </dl>
 </section>
 } @else if (errore()) {
-<p class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ errore() }}</p>
+<p class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">{{ errore() }}</p>
 } @else {
-<p class="mt-4 text-sm text-slate-500">Caricamento…</p>
+<p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Caricamento…</p>
 }
 <app-estrazione-fattura [idDocumento]="id()" />
 
 @if (documento()?.stato === 'INDICIZZATO') {
   <div class="mt-8">
-    <!--<app-chiedi-documenti [documentoId]="id()" /> Vechia versione -->
+    <!--<app-chiedi-documenti [documentoId]="id()" /> Vecchia versione -->
     <app-conversazioni [documentoId]="id()" />
   </div>
-  
 }
