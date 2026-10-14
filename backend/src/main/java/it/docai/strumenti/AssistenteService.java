@@ -1,5 +1,6 @@
 package it.docai.strumenti;
 
+import it.docai.consumo.ConsumoService;
 import it.docai.rag.*;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -40,12 +41,14 @@ public class AssistenteService {
     }
 
     public String chiedi(String domanda, String proprietario) {
+        var contesto = ContestoStrumenti.di(proprietario, null, new ArrayList<>(), new ArrayList<>());
+        contesto.put(ConsumoService.CHIAVE_OPERAZIONE, "ASSISTENTE");   // per il registro dei consumi
         try {
             String risposta = chatClient.prompt()
                     .system(regole)
                     .user(domanda)
                     .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
-                    .toolContext(ContestoStrumenti.di(proprietario, null, new ArrayList<>(), new ArrayList<>()))
+                    .toolContext(contesto)
                     .call()
                     .content();
             return Citazioni.normalizza(risposta);
@@ -62,13 +65,16 @@ public class AssistenteService {
         var fonti = new CopyOnWriteArrayList<Fonte>();                             // la riempiono i tool
         var risposta = new StringBuilder();
         var proposte = new CopyOnWriteArrayList<Proposta>();
+        var contesto = ContestoStrumenti.di(proprietario, c.getDocumentoId(), fonti, proposte);
+        contesto.put(ConsumoService.CHIAVE_OPERAZIONE, "ASSISTENTE");             // per il registro dei consumi
+
 
         Flux<EventoRag> testo = chatClient.prompt()
                 .system(regole)
                 .messages(cronologia(storia))                                      // la conversazione finora
                 .user(domanda)
                 .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
-                .toolContext(ContestoStrumenti.di(proprietario, c.getDocumentoId(), fonti, proposte))
+                .toolContext(contesto)
                 .stream()
                 .content()
                 .doOnNext(risposta::append)

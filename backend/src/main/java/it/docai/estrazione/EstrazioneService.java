@@ -1,5 +1,6 @@
 package it.docai.estrazione;
 
+import it.docai.consumo.ConsumoService;
 import it.docai.documento.ContenutoDocumentoRepository;
 import it.docai.documento.DocumentoNonTrovatoException;
 import it.docai.documento.DocumentoRepository;
@@ -9,6 +10,7 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 
@@ -87,6 +89,7 @@ public class EstrazioneService {
         return chatClient.prompt()
                 .options(ChatOptions.builder().temperature(0.0))   // estrazione: niente creatività
                 .user(messaggio)
+                .toolContext(Map.of(ConsumoService.CHIAVE_OPERAZIONE, "ESTRAZIONE"))   // per il registro dei consumi
                 .call()
                 .entity(Fattura.class);
     }

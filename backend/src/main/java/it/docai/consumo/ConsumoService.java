@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConsumoService {
 
-    public enum Operazione { ASSISTENTE, AGENTE, ESTRAZIONE, RAG }
+    //public enum Operazione { ASSISTENTE, AGENTE, ESTRAZIONE, RAG }
+    public static final String CHIAVE_OPERAZIONE = "operazione";
 
     private static final Logger log = LoggerFactory.getLogger(ConsumoService.class);
     private final JdbcClient jdbc;
@@ -19,16 +20,16 @@ public class ConsumoService {
     }
 
     /** Registra i token di una risposta del modello. Non deve mai far fallire la richiesta dell'utente. */
-    public void registra(String proprietario, Operazione operazione, ChatResponse risposta) {
+    public void registra(String proprietario, String operazione, ChatResponse risposta) {
         try {
             if (proprietario == null || risposta == null || risposta.getMetadata() == null) return;
             var uso = risposta.getMetadata().getUsage();
-            if (uso == null || uso.getPromptTokens() == null) return;   // es. modello che non riporta l'uso
+            if (uso == null || uso.getPromptTokens() == null) return;
             String modello = risposta.getMetadata().getModel();
             jdbc.sql("""
                     INSERT INTO consumo (proprietario, operazione, modello, token_in, token_out)
                     VALUES (?, ?, ?, ?, ?)""")
-                    .params(proprietario, operazione.name(), modello != null ? modello : "sconosciuto",
+                    .params(proprietario, operazione, modello != null ? modello : "sconosciuto",
                             uso.getPromptTokens(), uso.getCompletionTokens() != null ? uso.getCompletionTokens() : 0)
                     .update();
         } catch (RuntimeException e) {

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -42,24 +43,22 @@ public class AgenteService {
     private final StrumentiDocumenti strumentiDocumenti;
     private final StrumentiRicerca strumentiRicerca;
     private final String istruzioni;
-    private final ConsumoService consumoService;
 
     public AgenteService(ChatModel chatModel, ToolCallingManager toolCallingManager,
                          StrumentiDocumenti strumentiDocumenti, StrumentiRicerca strumentiRicerca,
-                         @Value("classpath:prompts/agente.st") Resource prompt,
-                         ConsumoService consumoService) throws IOException {
+                         @Value("classpath:prompts/agente.st") Resource prompt) throws IOException {
         this.chatModel = chatModel;
         this.toolCallingManager = toolCallingManager;
         this.strumentiDocumenti = strumentiDocumenti;
         this.strumentiRicerca = strumentiRicerca;
         this.istruzioni = prompt.getContentAsString(StandardCharsets.UTF_8);
-        this.consumoService = consumoService;
     }
 
     public RispostaAgente esegui(String compito, String proprietario) {
         List<Fonte> fonti = new CopyOnWriteArrayList<>();
         List<Proposta> proposte = new CopyOnWriteArrayList<>();   // resta vuota: l'agente non ha tool di modifica
-
+        var contesto = ContestoStrumenti.di(proprietario, null, fonti, proposte);
+        contesto.put(ConsumoService.CHIAVE_OPERAZIONE, "AGENTE");
         // Spring AI 2.0: OpenAiChatModel vuole OpenAiChatOptions. Parto dalle opzioni del modello
         // (modello, max token, extra-body di application.yml) e aggiungo solo tool e contesto.
         if (!(chatModel.getDefaultOptions().mutate() instanceof ToolCallingChatOptions.Builder builder)) {
@@ -68,11 +67,11 @@ public class AgenteService {
         ChatOptions opzioni = builder
                 .toolCallbacks(MethodToolCallbackProvider.builder()
                         .toolObjects(strumentiDocumenti, strumentiRicerca).build().getToolCallbacks())
-                .toolContext(ContestoStrumenti.di(proprietario, null, fonti, proposte))
+                .toolContext(contesto)
                 .build();
 
         Prompt prompt = new Prompt(List.<Message>of(new SystemMessage(istruzioni), new UserMessage(compito)), opzioni);
-        ChatResponse risposta = chiama(prompt, 0, proprietario);
+        ChatResponse risposta = chiama(prompt, 0);
         int tokenUsati = tokenIngresso(risposta);
 
         int passi = 0;
@@ -89,7 +88,7 @@ public class AgenteService {
                     .forEach(t -> strumentiUsati.add(t.name() + " " + t.arguments()));
             ToolExecutionResult esito = toolCallingManager.executeToolCalls(prompt, risposta);
             prompt = new Prompt(esito.conversationHistory(), opzioni);
-            risposta = chiama(prompt, passi, proprietario);
+            risposta = chiama(prompt, passi);
             tokenUsati += tokenIngresso(risposta);
         }
 
@@ -97,16 +96,16 @@ public class AgenteService {
         if (limiteRaggiunto) {
             log.warn("Agente fermato per '{}': {} (token in usati: {})", compito,
                     budgetEsaurito ? "budget di token esaurito" : "limite di passi raggiunto", tokenUsati);
-            risposta = chiudi(prompt, proprietario);
+            risposta = chiudi(prompt, contesto);
         }
         String testo = Citazioni.normalizza(risposta.getResult().getOutput().getText());
         return new RispostaAgente(testo, passi, limiteRaggiunto, strumentiUsati, List.copyOf(fonti));
     }
 
     /** Un giro con il modello, con il log dei token: in un agente i costi crescono a ogni passo. */
-    private ChatResponse chiama(Prompt prompt, int passo, String proprietario) {
+    /** Un giro con il modello, con il log dei token. Il consumo lo registra ConsumoObservationHandler. */
+    private ChatResponse chiama(Prompt prompt, int passo) {
         ChatResponse risposta = chatModel.call(prompt);
-        consumoService.registra(proprietario, ConsumoService.Operazione.AGENTE, risposta);
         var uso = risposta.getMetadata().getUsage();
         log.info("Agente passo {}: token in {} / out {}, tool richiesti: {}",
                 passo, uso.getPromptTokens(), uso.getCompletionTokens(), risposta.hasToolCalls());
@@ -117,12 +116,16 @@ public class AgenteService {
      * Uso il prompt dell'ultimo giro, che finisce con le risposte dei tool: la richiesta di tool
      * rimasta in sospeso non entra nella cronologia, altrimenti l'API la rifiuterebbe.
      */
-    private ChatResponse chiudi(Prompt ultimo, String proprietario) {
+    private ChatResponse chiudi(Prompt ultimo, Map<String, Object> contesto) {
         List<Message> messaggi = new ArrayList<>(ultimo.getInstructions());
         messaggi.add(new UserMessage("""
                 Hai raggiunto il numero massimo di passaggi. Non puoi più usare strumenti.
                 Rispondi ora con le informazioni che hai già, e di' chiaramente cosa non sei riuscito a verificare."""));
-        return chiama(new Prompt(messaggi, chatModel.getDefaultOptions()), PASSI_MASSIMI + 1, proprietario);
+        if (!(chatModel.getDefaultOptions().mutate() instanceof ToolCallingChatOptions.Builder builder)) {
+            throw new IllegalStateException("Il modello configurato non supporta i tool");
+        }
+        ChatOptions senzaTool = builder.toolContext(contesto).build();      // nessun toolCallbacks
+        return chiama(new Prompt(messaggi, senzaTool), PASSI_MASSIMI + 1);
     }
 
     private static int tokenIngresso(ChatResponse risposta) {

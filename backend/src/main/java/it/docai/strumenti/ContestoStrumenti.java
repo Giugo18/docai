@@ -11,7 +11,7 @@ import java.util.UUID;
 /** Cosa passiamo ai tool dal codice: il modello non lo vede e non può cambiarlo. */
 public final class ContestoStrumenti {
 
-    static final String PROPRIETARIO = "proprietario";
+    public static final String PROPRIETARIO = "proprietario";
     static final String DOCUMENTO = "documentoId";
     static final String FONTI = "fonti";
     static final String PROPOSTE = "proposte";
