@@ -1,5 +1,6 @@
 package it.docai.agente;
 
+import it.docai.consumo.ConsumoService;
 import it.docai.rag.Citazioni;
 import it.docai.rag.Fonte;
 import it.docai.rag.Proposta;
@@ -34,21 +35,25 @@ public class AgenteService {
 
     private static final Logger log = LoggerFactory.getLogger(AgenteService.class);
     static final int PASSI_MASSIMI = 6;
+    static final int BUDGET_TOKEN_INGRESSO = 6_000;   // sotto gli 8.000 TPM di Groq, lascia spazio all'output
 
     private final ChatModel chatModel;
     private final ToolCallingManager toolCallingManager;
     private final StrumentiDocumenti strumentiDocumenti;
     private final StrumentiRicerca strumentiRicerca;
     private final String istruzioni;
+    private final ConsumoService consumoService;
 
     public AgenteService(ChatModel chatModel, ToolCallingManager toolCallingManager,
                          StrumentiDocumenti strumentiDocumenti, StrumentiRicerca strumentiRicerca,
-                         @Value("classpath:prompts/agente.st") Resource prompt) throws IOException {
+                         @Value("classpath:prompts/agente.st") Resource prompt,
+                         ConsumoService consumoService) throws IOException {
         this.chatModel = chatModel;
         this.toolCallingManager = toolCallingManager;
         this.strumentiDocumenti = strumentiDocumenti;
         this.strumentiRicerca = strumentiRicerca;
         this.istruzioni = prompt.getContentAsString(StandardCharsets.UTF_8);
+        this.consumoService = consumoService;
     }
 
     public RispostaAgente esegui(String compito, String proprietario) {
@@ -67,46 +72,61 @@ public class AgenteService {
                 .build();
 
         Prompt prompt = new Prompt(List.<Message>of(new SystemMessage(istruzioni), new UserMessage(compito)), opzioni);
-        ChatResponse risposta = chiama(prompt, 0);
+        ChatResponse risposta = chiama(prompt, 0, proprietario);
+        int tokenUsati = tokenIngresso(risposta);
 
         int passi = 0;
         List<String> strumentiUsati = new ArrayList<>();
+        boolean budgetEsaurito = false;
         while (risposta.hasToolCalls() && passi < PASSI_MASSIMI) {
+            // il prossimo giro costerà almeno quanto l'ultimo, più i nuovi risultati dei tool
+            if (tokenUsati + tokenIngresso(risposta) > BUDGET_TOKEN_INGRESSO) {
+                budgetEsaurito = true;
+                break;
+            }
             passi++;
             risposta.getResult().getOutput().getToolCalls()
                     .forEach(t -> strumentiUsati.add(t.name() + " " + t.arguments()));
             ToolExecutionResult esito = toolCallingManager.executeToolCalls(prompt, risposta);
             prompt = new Prompt(esito.conversationHistory(), opzioni);
-            risposta = chiama(prompt, passi);
+            risposta = chiama(prompt, passi, proprietario);
+            tokenUsati += tokenIngresso(risposta);
         }
 
         boolean limiteRaggiunto = risposta.hasToolCalls();
         if (limiteRaggiunto) {
-            log.warn("Agente: limite di {} passi raggiunto per '{}'", PASSI_MASSIMI, compito);
-            risposta = chiudi(prompt);
+            log.warn("Agente fermato per '{}': {} (token in usati: {})", compito,
+                    budgetEsaurito ? "budget di token esaurito" : "limite di passi raggiunto", tokenUsati);
+            risposta = chiudi(prompt, proprietario);
         }
         String testo = Citazioni.normalizza(risposta.getResult().getOutput().getText());
         return new RispostaAgente(testo, passi, limiteRaggiunto, strumentiUsati, List.copyOf(fonti));
     }
 
     /** Un giro con il modello, con il log dei token: in un agente i costi crescono a ogni passo. */
-    private ChatResponse chiama(Prompt prompt, int passo) {
+    private ChatResponse chiama(Prompt prompt, int passo, String proprietario) {
         ChatResponse risposta = chatModel.call(prompt);
+        consumoService.registra(proprietario, ConsumoService.Operazione.AGENTE, risposta);
         var uso = risposta.getMetadata().getUsage();
         log.info("Agente passo {}: token in {} / out {}, tool richiesti: {}",
                 passo, uso.getPromptTokens(), uso.getCompletionTokens(), risposta.hasToolCalls());
         return risposta;
     }
-
     /**
      * Tetto raggiunto: un'ultima chiamata SENZA tool, chiedendo una risposta onesta con quello che c'è.
      * Uso il prompt dell'ultimo giro, che finisce con le risposte dei tool: la richiesta di tool
      * rimasta in sospeso non entra nella cronologia, altrimenti l'API la rifiuterebbe.
      */
-    private ChatResponse chiudi(Prompt ultimo) {
+    private ChatResponse chiudi(Prompt ultimo, String proprietario) {
         List<Message> messaggi = new ArrayList<>(ultimo.getInstructions());
         messaggi.add(new UserMessage("""
                 Hai raggiunto il numero massimo di passaggi. Non puoi più usare strumenti.
                 Rispondi ora con le informazioni che hai già, e di' chiaramente cosa non sei riuscito a verificare."""));
-        return chiama(new Prompt(messaggi, chatModel.getDefaultOptions()), PASSI_MASSIMI + 1);    }
+        return chiama(new Prompt(messaggi, chatModel.getDefaultOptions()), PASSI_MASSIMI + 1, proprietario);
+    }
+
+    private static int tokenIngresso(ChatResponse risposta) {
+        var uso = risposta.getMetadata().getUsage();
+        return uso != null && uso.getPromptTokens() != null ? uso.getPromptTokens() : 0;
+    }
 }
