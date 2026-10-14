@@ -74,3 +74,25 @@ function Assistente($testo) {
   if ($dati -is [string]) { $dati; return }
   "`n$($dati.risposta)`n"
 }
+
+function Valutazione {
+  NuovoToken valutatore | Out-Null
+  $parametri = @{
+    Method          = 'Post'
+    Uri             = 'http://localhost:8080/api/rag/valutazione'
+    Headers         = @{ Authorization = "Bearer $global:token" }
+    UseBasicParsing = $true
+    TimeoutSec      = 900
+  }
+  try {
+    $risposta = Invoke-WebRequest @parametri
+  } catch {
+    "Errore $($_.Exception.Response.StatusCode.value__): guarda il log del backend"
+    return
+  }
+  # PowerShell 5.1 decodifica come Latin-1: rileggo i byte come UTF-8
+  $json = [Text.Encoding]::UTF8.GetString($risposta.RawContentStream.ToArray())
+  $global:valutazione = $json | ConvertFrom-Json
+  $json | Out-File -Encoding utf8 .\valutazione-ultima.json
+  $global:valutazione | Select-Object casi, fontiTrovate, fontiCitate, citazioniValide, risposteCorrette, tempoMedio
+}

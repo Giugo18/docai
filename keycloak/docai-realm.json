@@ -56,6 +56,17 @@
       "lastName": "Bianchi",
       "credentials": [ { "type": "password", "value": "anna", "temporary": false } ],
       "realmRoles": ["user", "admin", "offline_access"]
+    },
+    {
+      "id": "217669d8-ac27-4a84-8fc9-99b58a24ef9e",
+      "username": "valutatore",
+      "enabled": true,
+      "email": "valu@test.com",
+      "emailVerified": true,
+      "firstName": "valutatore",
+      "lastName": "valutatore",
+      "credentials": [ { "type": "valutatore", "value": "valutatore", "temporary": false } ],
+      "realmRoles": ["user"]
     }
   ]
 }
