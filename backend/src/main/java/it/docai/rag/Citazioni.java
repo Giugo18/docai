@@ -5,9 +5,9 @@ import java.util.regex.Pattern;
 public final class Citazioni {
 
     // 【Fonte 2】, [[Fonte 2]], [ Fonte 2 ], 【【Fonte 2】】 → [Fonte 2]
-    private static final Pattern CITAZIONE =
-            Pattern.compile("[\\[【]+\\s*Fonte\\s*(\\d+)\\s*[\\]】]+", Pattern.UNICODE_CHARACTER_CLASS);
-
+    private static final Pattern CITAZIONE = Pattern.compile(
+            "[\\[【]+\\s*(?:fonte\\s*)?(\\d+)(?:\\s*†[^\\]】]*)?\\s*[\\]】]+",
+            Pattern.UNICODE_CHARACTER_CLASS | Pattern.CASE_INSENSITIVE);
     private Citazioni() {
     }
 

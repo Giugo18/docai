@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /** Cosa passiamo ai tool dal codice: il modello non lo vede e non può cambiarlo. */
-final class ContestoStrumenti {
+public final class ContestoStrumenti {
 
     static final String PROPRIETARIO = "proprietario";
     static final String DOCUMENTO = "documentoId";
@@ -19,7 +19,7 @@ final class ContestoStrumenti {
     private ContestoStrumenti() {
     }
 
-    static Map<String, Object> di(String proprietario, UUID documentoId, List<Fonte> fonti) {
+    public static Map<String, Object> di(String proprietario, UUID documentoId, List<Fonte> fonti) {
         var contesto = new HashMap<String, Object>();       // Map.of non accetta null
         contesto.put(PROPRIETARIO, proprietario);
         contesto.put(FONTI, fonti);
@@ -29,7 +29,7 @@ final class ContestoStrumenti {
         return contesto;
     }
 
-    static Map<String, Object> di(String proprietario, UUID documentoId,
+    public static Map<String, Object> di(String proprietario, UUID documentoId,
                                   List<Fonte> fonti, List<Proposta> proposte) {
         var contesto = new HashMap<String, Object>();
         contesto.put(PROPRIETARIO, proprietario);
