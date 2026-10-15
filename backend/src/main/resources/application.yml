@@ -73,6 +73,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  reactor:
+    context-propagation: auto
 management:
   endpoints:
     web:
@@ -86,6 +88,8 @@ server:
 logging:
   level:
     it.docai.rag: debug
+  pattern:
+    level: "%5p [%X{idRichiesta:-}]"
 docai:
   valutazione:
     attiva: ${VALUTAZIONE_ATTIVA:true}

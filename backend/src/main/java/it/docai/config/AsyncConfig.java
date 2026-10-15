@@ -19,7 +19,7 @@ public class AsyncConfig {
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(1);
         executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("indicizzazione-");
+        executor.setTaskDecorator(new CopiaMdc());
         return executor;
     }
 

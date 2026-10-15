@@ -1,5 +1,6 @@
 package it.docai.errori;
 
+import it.docai.config.IdRichiestaFilter;
 import it.docai.documento.DocumentoNonTrovatoException;
 import it.docai.documento.ErroreUpload;
 import it.docai.documento.UploadNonValidoException;
@@ -10,6 +11,7 @@ import it.docai.rag.ConversazioneNonTrovataException;
 import it.docai.strumenti.ModelloOccupatoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -35,19 +37,19 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         problema.setTitle("Documento non trovato");
         problema.setType(URI.create("https://docai.it/errori/documento-non-trovato"));
         problema.setProperty("documentoId", ex.getId());
-        return problema;
+        return conId(problema);
     }
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail erroreImprevisto(Exception ex) {
         log.error("Errore imprevisto", ex);   // lo stack trace va nel log, non al client
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Si è verificato un errore interno");
+        return conId(ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Si è verificato un errore interno"));
     }
 
     @ExceptionHandler(UploadNonValidoException.class)
     public ProblemDetail uploadNonValido(UploadNonValidoException ex) {
-        return switch (ex.getErrore()) {
+        return conId(switch (ex.getErrore()) {
             case ErroreUpload.FileVuoto() ->
                     ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Il file è vuoto");
             case ErroreUpload.TipoNonAmmesso(var tipo) ->
@@ -59,7 +61,7 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
             case ErroreUpload.NonUnPdf() ->
                     ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                             "Il file non è un PDF valido");
-        };
+        });
     }
 
     @Override
@@ -79,7 +81,20 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         problema.setDetail(String.join("; ", errori.values()));
         problema.setProperty("errori", errori);
 
-        return handleExceptionInternal(ex, problema, headers, status, request);
+        return handleExceptionInternal(ex, problema, headers, status, request);   // l'id lo aggiunge createResponseEntity
+    }
+
+    /**
+     * Tutti gli errori gestiti da ResponseEntityExceptionHandler (405, 415, body illeggibile, validazione…)
+     * passano di qui prima di diventare una risposta: un solo punto per aggiungere l'id anche a loro.
+     */
+    @Override
+    protected ResponseEntity<Object> createResponseEntity(Object body, HttpHeaders headers,
+                                                          HttpStatusCode status, WebRequest request) {
+        if (body instanceof ProblemDetail problema) {
+            conId(problema);
+        }
+        return super.createResponseEntity(body, headers, status, request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -88,7 +103,7 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
                 "Non hai i permessi per questa operazione");
         problema.setTitle("Accesso negato");
         problema.setType(URI.create("https://docai.it/errori/accesso-negato"));
-        return problema;
+        return conId(problema);
     }
 
     @ExceptionHandler(ContenutoNonDisponibileException.class)
@@ -96,7 +111,7 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
         problema.setTitle("Contenuto non disponibile");
         problema.setType(URI.create("https://docai.it/errori/contenuto-non-disponibile"));
-        return problema;
+        return conId(problema);
     }
 
     @ExceptionHandler(TestoNonEstraibileException.class)
@@ -104,7 +119,7 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         problema.setTitle("Testo non estraibile");
         problema.setType(URI.create("https://docai.it/errori/testo-non-estraibile"));
-        return problema;
+        return conId(problema);
     }
 
     @ExceptionHandler(DocumentoTroppoLungoException.class)
@@ -112,7 +127,7 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         var problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
         problema.setTitle("Documento troppo lungo");
         problema.setType(URI.create("https://docai.it/errori/documento-troppo-lungo"));
-        return problema;
+        return conId(problema);
     }
 
     @ExceptionHandler(ConversazioneNonTrovataException.class)
@@ -120,7 +135,7 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         var problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
         problema.setTitle("Conversazione non trovata");
         problema.setType(URI.create("https://docai.it/errori/conversazione-non-trovata"));
-        return problema;
+        return conId(problema);
     }
 
     @ExceptionHandler(ModelloOccupatoException.class)
@@ -129,6 +144,12 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
                 "L'assistente ha raggiunto il limite di richieste: riprova tra un minuto, "
                         + "oppure apri una nuova conversazione.");
         pd.setTitle("Assistente occupato");
-        return pd;
+        return conId(pd);
+    }
+
+    /** L'id della richiesta nel corpo dell'errore: chi vede l'errore può citarlo, e lo si trova subito nel log. */
+    private static ProblemDetail conId(ProblemDetail problema) {
+        problema.setProperty("idRichiesta", MDC.get(IdRichiestaFilter.CHIAVE_MDC));
+        return problema;
     }
 }

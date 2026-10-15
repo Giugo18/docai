@@ -96,7 +96,7 @@ public class AssistenteService {
                     Flux.fromIterable(List.copyOf(proposte)).map(EventoRag::proposta));
         });
 
-        return Flux.concat(testo, fine);
+        return Flux.concat(testo, fine).contextCapture();
     }
 
     private static List<Message> cronologia(List<Messaggio> storia) {

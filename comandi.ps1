@@ -49,8 +49,16 @@ function Api($metodo, $percorso, $corpo) {
   }
   try {
     $r = Invoke-WebRequest @parametri -TimeoutSec 600
-  } catch {
-    "Errore $($_.Exception.Response.StatusCode.value__): guarda il log del backend"
+  }catch {
+    $risposta = $_.Exception.Response
+    if (-not $risposta) { "Errore: $($_.Exception.Message)"; return }     # backend spento, timeout…
+    $stato = $risposta.StatusCode.value__
+    $id = $risposta.Headers['X-Request-Id']
+    # PowerShell 5.1 non legge il corpo di application/problem+json: lo leggo dallo stream, in UTF-8
+    $lettore = New-Object IO.StreamReader($risposta.GetResponseStream(), [Text.Encoding]::UTF8)
+    $corpo = $lettore.ReadToEnd()
+    $dettaglio = try { ($corpo | ConvertFrom-Json).detail } catch { $corpo }
+    "Errore $stato [id $id]: $dettaglio"
     return
   }
   $testo = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())
