@@ -36,4 +36,5 @@ public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
 
     List<Documento> findByStato(StatoDocumento stato);
     List<Documento> findByStatoIn(Collection<StatoDocumento> stati);
+    List<Documento> findByStatoAndTentativiIndicizzazioneLessThan(StatoDocumento stato, int massimo);
 }

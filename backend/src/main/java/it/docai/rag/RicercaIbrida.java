@@ -1,5 +1,7 @@
 package it.docai.rag;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -10,8 +12,10 @@ import java.util.*;
 @Component
 public class RicercaIbrida {
 
-    private static final int CANDIDATI = 20;   // per ciascuna delle due classifiche
-    private static final int RRF_K = 60;       // costante standard della Reciprocal Rank Fusion
+    private static final Logger log = LoggerFactory.getLogger(RicercaIbrida.class);
+    private static final int CANDIDATI = 50;          // per ciascuna delle due classifiche
+    private static final int RRF_K = 60;              // costante standard della Reciprocal Rank Fusion
+    private static final int MOSTRATI_IN_DEBUG = 10;  // in debug si vedono anche gli esclusi
 
     private static final String SQL = """
         WITH
@@ -46,7 +50,7 @@ public class RicercaIbrida {
             ) punteggi
             ORDER BY frase DESC, rango DESC
             LIMIT :candidati
-                    ),
+        ),
         -- 2. fusione RRF: 1/(60 + posizione) in ogni classifica in cui il chunk compare
         fusione AS (
             SELECT id,
@@ -56,21 +60,30 @@ public class RicercaIbrida {
                   UNION ALL
                   SELECT id, pos, true  AS per_parole FROM testuale) candidati
             GROUP BY id
+        ),
+        -- 3. una sola fonte per pagina: due chunk della stessa pagina dicono quasi la stessa cosa
+        classificati AS (
+            SELECT f.id, f.rrf, f.per_parole,
+                   row_number() OVER (PARTITION BY v.metadata->>'documentoId', v.metadata->>'pagina'
+                                      ORDER BY f.rrf DESC) AS n_pagina
+            FROM fusione f
+            JOIN vector_store v ON v.id = f.id
+            WHERE f.per_parole OR 1 - (v.embedding <=> CAST(:vettore AS vector)) >= :soglia
         )
-        -- 3. i migliori dopo la fusione, con i dati per le fonti
+        -- 4. i migliori, con i dati per le fonti
         SELECT v.id::text                               AS id,
                v.content                                AS testo,
                v.metadata->>'documentoId'               AS documento_id,
                v.metadata->>'nomeFile'                  AS nome_file,
                (v.metadata->>'pagina')::int             AS pagina,
                1 - (v.embedding <=> CAST(:vettore AS vector)) AS similarita,
-               f.rrf,
-               f.per_parole
-        FROM fusione f
-        JOIN vector_store v ON v.id = f.id
-        WHERE f.per_parole OR 1 - (v.embedding <=> CAST(:vettore AS vector)) >= :soglia
-        ORDER BY f.rrf DESC
-        LIMIT :k
+               c.rrf,
+               c.per_parole
+        FROM classificati c
+        JOIN vector_store v ON v.id = c.id
+        WHERE c.n_pagina = 1
+        ORDER BY c.rrf DESC
+        LIMIT :limite
         """;
 
     private final JdbcClient jdbc;
@@ -83,8 +96,9 @@ public class RicercaIbrida {
 
     public List<Document> cerca(String domanda, UUID documentoId, String proprietario, int k, double soglia) {
         String vettore = Arrays.toString(embeddingModel.embed(domanda));   // "[0.012, -0.034, ...]"
+        int limite = log.isDebugEnabled() ? Math.max(k, MOSTRATI_IN_DEBUG) : k;
 
-        return jdbc.sql(SQL)
+        List<Document> classifica = jdbc.sql(SQL)
                 .param("vettore", vettore)
                 .param("domanda", domanda)
                 .param("finestre", finestre(domanda))
@@ -93,7 +107,7 @@ public class RicercaIbrida {
                 .param("candidati", CANDIDATI)
                 .param("rrfK", RRF_K)
                 .param("soglia", soglia)
-                .param("k", k)
+                .param("limite", limite)
                 .query((rs, riga) -> Document.builder()
                         .id(rs.getString("id"))
                         .text(rs.getString("testo"))
@@ -106,6 +120,18 @@ public class RicercaIbrida {
                         .score(rs.getDouble("similarita"))
                         .build())
                 .list();
+
+        if (log.isDebugEnabled()) {
+            log.debug("Ricerca '{}': classifica dopo la fusione", domanda);
+            for (int i = 0; i < classifica.size(); i++) {
+                var d = classifica.get(i);
+                log.debug("  {}{}. {} p.{} sim={} rrf={} parole={}", i < k ? "" : "(escluso) ", i + 1,
+                        d.getMetadata().get("nomeFile"), d.getMetadata().get("pagina"),
+                        "%.3f".formatted(d.getScore()), "%.4f".formatted((Double) d.getMetadata().get("rrf")),
+                        d.getMetadata().get("perParole"));
+            }
+        }
+        return List.copyOf(classifica.subList(0, Math.min(k, classifica.size())));
     }
 
     private static String[] finestre(String domanda) {

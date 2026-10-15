@@ -15,7 +15,7 @@ public class TestoPdf {
     /** Il testo selezionabile del PDF, pagina dopo pagina */
     public String estrai(byte[] pdf) {
         try (PDDocument documento = Loader.loadPDF(pdf)) {
-            return new PDFTextStripper().getText(documento);
+            return Testo.normalizza(new PDFTextStripper().getText(documento));
         } catch (IOException e) {
             throw new TestoNonEstraibileException("Il file non è un PDF leggibile");
         }
@@ -30,7 +30,7 @@ public class TestoPdf {
             for (int p = 1; p <= totale; p++) {
                 stripper.setStartPage(p);
                 stripper.setEndPage(p);
-                pagine.add(stripper.getText(documento));
+                pagine.add(Testo.normalizza(stripper.getText(documento)));
             }
             return pagine;
         } catch (IOException e) {

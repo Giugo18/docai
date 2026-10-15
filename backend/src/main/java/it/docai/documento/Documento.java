@@ -31,6 +31,11 @@ public class Documento {
     @Column(name = "caricato_il", nullable = false)
     private Instant caricatoIl;
 
+    @Column(name = "tentativi_indicizzazione", nullable = false)
+    private int tentativiIndicizzazione;
+
+
+
     protected Documento() {
         // richiesto da JPA
     }
@@ -47,8 +52,6 @@ public class Documento {
         return d;
     }
 
-    public void segnaIndicizzato() { this.stato = StatoDocumento.INDICIZZATO; }
-    public void segnaErrore()      { this.stato = StatoDocumento.ERRORE; }
     public void iniziaIndicizzazione() { this.stato = StatoDocumento.IN_INDICIZZAZIONE; }
     public UUID getId()               { return id; }
     public String getNomeFile()       { return nomeFile; }
@@ -60,6 +63,20 @@ public class Documento {
 
     public void rinomina(String nuovoNome) {
         this.nomeFile = nuovoNome;
+    }
+
+    public void segnaIndicizzato() {
+        this.stato = StatoDocumento.INDICIZZATO;
+        this.tentativiIndicizzazione = 0;            // successo: si riparte da zero
+    }
+
+    public void segnaErrore() {
+        this.stato = StatoDocumento.ERRORE;
+        this.tentativiIndicizzazione++;              // un fallimento in più: oltre il massimo il batch smette
+    }
+
+    public int getTentativiIndicizzazione() {
+        return tentativiIndicizzazione;
     }
 
 

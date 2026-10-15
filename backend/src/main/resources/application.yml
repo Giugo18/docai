@@ -88,11 +88,14 @@ server:
 logging:
   level:
     it.docai.rag: debug
+    it.docai.rag.RicercaIbrida: DEBUG
   pattern:
     level: "%5p [%X{idRichiesta:-}]"
 docai:
   valutazione:
     attiva: ${VALUTAZIONE_ATTIVA:true}
+  #indicizzazione:
+    #ripresa: PT1M
   prezzi:
     valuta: USD
     modelli:

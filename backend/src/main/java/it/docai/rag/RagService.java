@@ -95,12 +95,9 @@ public class RagService {
     }
 
     private List<Document> cerca(String domanda, UUID documentoId, String proprietario) {
-        List<Document> trovati = ricercaIbrida.cerca(domanda, documentoId, proprietario, CHUNK_DA_USARE, SOGLIA_MINIMA);
-        trovati.forEach(d -> log.debug("  {} p.{} sim={} rrf={} parole={}",
-                d.getMetadata().get("nomeFile"), d.getMetadata().get("pagina"),
-                d.getScore(), d.getMetadata().get("rrf"), d.getMetadata().get("perParole")));
-        return trovati;
+        return ricercaIbrida.cerca(domanda, documentoId, proprietario, CHUNK_DA_USARE, SOGLIA_MINIMA);
     }
+
     private static Fonte fonte(int numero, Document d) {
         var m = d.getMetadata();
         String testo = d.getText();
