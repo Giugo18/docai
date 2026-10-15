@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 public final class Citazioni {
 
     private static final Pattern NORMALIZZATA = Pattern.compile("\\[Fonte (\\d+)]");
+    private static final Pattern INVISIBILI = Pattern.compile("[\\u200B-\\u200D\\u2060\\uFEFF]");
+
 
 
     // 【Fonte 2】, [[Fonte 2]], [ Fonte 2 ], 【【Fonte 2】】 → [Fonte 2]
@@ -19,7 +21,11 @@ public final class Citazioni {
     }
 
     public static String normalizza(String testo) {
-        return testo == null ? null : CITAZIONE.matcher(testo).replaceAll("[Fonte $1]");
+        if (testo == null) {
+            return null;
+        }
+        String pulito = INVISIBILI.matcher(testo).replaceAll("");
+        return CITAZIONE.matcher(pulito).replaceAll("[Fonte $1]");
     }
 
     /** I numeri citati nel testo, in ordine di prima comparsa e senza ripetizioni. Accetta anche testo non normalizzato. */

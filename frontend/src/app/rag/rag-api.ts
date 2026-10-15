@@ -54,6 +54,8 @@ const stato: StatoRisposta = { fonti: [], testo: '', riscritta: null, proposte: 
 const CITAZIONE = /[\[【]+\s*Fonte\s*(\d+)\s*[\]】]+/g;
 
 /** 【Fonte 2】, [[Fonte 2]], [Fonte 2] con spazi speciali → [Fonte 2] */
-export function normalizzaCitazioni(testo: string): string {
-  return testo.replace(CITAZIONE, '[Fonte $1]');
-}
+  export function normalizzaCitazioni(testo: string): string {
+    return testo
+      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')                                    // invisibili
+      .replace(/[\[【]+\s*(?:fonte\s*)?(\d+)(?:\s*†[^\]】]*)?\s*[\]】]+/gi, '[Fonte $1]');
+  }

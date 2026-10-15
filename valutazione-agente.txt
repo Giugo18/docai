@@ -1,0 +1,25 @@
+﻿
+
+domanda          : [AGENTE] Somma gli importi totali delle fatture che ho caricato.
+passi            : 2
+rispostaCorretta : True
+fonteCitata      : False
+risposta         : Somma degli importi totali delle fatture caricate: **451,40 €** [​Fonte 1].
+
+domanda          : [AGENTE] Quanto ho speso in totale per biglietti da visita e volantini insieme?
+passi            : 2
+rispostaCorretta : True
+fonteCitata      : True
+risposta         : Hai speso **160,00 €** per i volantini e **60,00 €** per i biglietti da visita, per un totale di **220,00 €**.  
+                   
+                   [Fonte 1]
+
+domanda          : [AGENTE] [vuoto] Somma gli importi totali delle fatture che ho caricato.
+passi            : 1
+rispostaCorretta : True
+fonteCitata      : True
+risposta         : Non hai caricato alcun documento PDF. Per poter sommare gli importi delle fatture è necessario che i file siano presenti nel sistema. Carica i PDF delle 
+                   fatture e poi potrò procedere con il calcolo.
+
+
+

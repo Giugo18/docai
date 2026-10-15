@@ -26,4 +26,12 @@ class CitazioniTest {
         assertThat(Citazioni.numeri(null)).isEmpty();
         assertThat(Citazioni.inventate("Senza citazioni", List.of())).isEmpty();
     }
+
+    @Test
+    void ignoraICaratteriInvisibili() {
+        // U+200B (zero-width space) dopo la parentesi e U+202F tra "Fonte" e il numero: visto con gpt-oss
+        String testo = "Totale 451,40 € [\u200BFonte\u202F1].";
+        assertThat(Citazioni.normalizza(testo)).isEqualTo("Totale 451,40 € [Fonte 1].");
+        assertThat(Citazioni.numeri(testo)).containsExactly(1);
+    }
 }
