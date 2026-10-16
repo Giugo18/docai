@@ -26,9 +26,11 @@ services:
     restart: unless-stopped
 
   keycloak:
-    ports: !reset []
+    ports: !reset ["127.0.0.1:8180:8080"]
     environment:
       KC_PROXY_HEADERS: xforwarded   # fidati degli header X-Forwarded-* mandati da Caddy
+      KC_HOSTNAME_ADMIN: http://localhost:8180   # la console admin vive solo nel tunnel
+
     restart: unless-stopped
 
   # Embeddings (bge-m3) calcolati sul server: il testo dei documenti non esce per l'indicizzazione.
@@ -36,6 +38,9 @@ services:
   # L'app lo raggiunge nella rete interna come http://ollama:11434
   ollama:
     ports: !reset []
+    environment:
+      OLLAMA_MAX_LOADED_MODELS: 1   # un solo modello in memoria
+      OLLAMA_NUM_PARALLEL: 1        # una richiesta alla volta: con 2 core è più veloce che dividerli
     restart: unless-stopped
 
   app:

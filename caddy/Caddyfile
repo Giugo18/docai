@@ -1,10 +1,34 @@
+# Header di sicurezza comuni ai due siti
+(sicurezza) {
+	header {
+		Strict-Transport-Security "max-age=31536000"   # il browser userà solo HTTPS per un anno
+		X-Content-Type-Options "nosniff"                # niente "indovinare" il tipo dei file
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server                                         # non dire che software gira
+	}
+}
+
 # Il sito: tutto al frontend (nginx passa /api al backend)
 {$DOMINIO} {
+	import sicurezza
+	header {
+		# chi può mostrare il sito in un iframe: solo il sito stesso
+		# ('self' e non 'none': il login silenzioso di Keycloak usa un iframe della stessa origine)
+		Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+	}
 	encode zstd gzip
 	reverse_proxy frontend:80
 }
 
 # Keycloak su un sottodominio
 auth.{$DOMINIO} {
+	import sicurezza
+
+	# Console di amministrazione e realm master: NON raggiungibili da Internet.
+	# Si usano solo dal tunnel SSH (vedi docker-compose.prod.yml).
+	@amministrazione path /admin /admin/* /realms/master /realms/master/*
+	respond @amministrazione 404
+
 	reverse_proxy keycloak:8080
 }
