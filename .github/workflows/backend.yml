@@ -8,7 +8,7 @@ on:
     paths: ['backend/**', '.github/workflows/backend.yml']
 
 permissions:
-  contents: read                       # il job legge il codice e basta
+  contents: read                       # di base i job leggono il codice e basta
 
 concurrency:
   group: backend-${{ github.ref }}     # due push di fila: il primo giro viene annullato
@@ -49,3 +49,38 @@ jobs:
         with:
           name: report-test
           path: backend/target/surefire-reports/
+
+  immagine:
+    name: Immagine Docker
+    needs: test                               # parte solo se i test sono verdi
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'   # non sulle PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write                         # pubblicare su GHCR
+
+    steps:
+      - name: Codice
+        uses: actions/checkout@v4
+
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login a GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push
+        uses: docker/build-push-action@v6
+        with:
+          context: backend                    # usa backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/giugo18/docai-backend:${{ github.sha }}
+            ghcr.io/giugo18/docai-backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max

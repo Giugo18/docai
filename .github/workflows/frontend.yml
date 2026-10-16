@@ -27,15 +27,50 @@ jobs:
       - name: Codice
         uses: actions/checkout@v4
 
-      - name: Node 22
+      - name: Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'                  # stessa versione del Dockerfile
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Dipendenze
-        run: npm ci                                   # esattamente le versioni di package-lock.json
+        run: npm ci                           # esattamente le versioni di package-lock.json
 
       - name: Build
         run: npx ng build --configuration production
+
+  immagine:
+    name: Immagine Docker
+    needs: build                              # parte solo se la build è verde
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'   # non sulle PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write                         # pubblicare su GHCR
+
+    steps:
+      - name: Codice
+        uses: actions/checkout@v4
+
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login a GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}   # token automatico, nessun segreto da creare
+
+      - name: Build e push
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: |
+            ghcr.io/giugo18/docai-frontend:${{ github.sha }}
+            ghcr.io/giugo18/docai-frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
