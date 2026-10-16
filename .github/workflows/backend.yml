@@ -1,0 +1,51 @@
+name: Backend
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  pull_request:
+    paths: ['backend/**', '.github/workflows/backend.yml']
+
+permissions:
+  contents: read                       # il job legge il codice e basta
+
+concurrency:
+  group: backend-${{ github.ref }}     # due push di fila: il primo giro viene annullato
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Java 21, Testcontainers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # Nei test il modello è finto: serve solo un valore perché il contesto Spring parta.
+      # NON è un segreto e non deve mai esserlo: la chiave vera non entra nella CI.
+      GROQ_API_KEY: chiave-finta-per-i-test
+
+    steps:
+      - name: Codice
+        uses: actions/checkout@v4
+
+      - name: Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven                        # riusa ~/.m2 tra un giro e l'altro
+          cache-dependency-path: backend/pom.xml
+
+      - name: Test
+        run: mvn -B -ntp verify               # -B: niente colori interattivi, -ntp: niente log dei download
+
+      - name: Report dei test (solo se falliscono)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-test
+          path: backend/target/surefire-reports/
