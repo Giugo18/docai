@@ -1,5 +1,5 @@
 # Produzione: si somma a docker-compose.yml
-# docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app up -d --build
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile ai --profile app up -d --build
 
 services:
   caddy:
@@ -29,6 +29,13 @@ services:
     ports: !reset []
     environment:
       KC_PROXY_HEADERS: xforwarded   # fidati degli header X-Forwarded-* mandati da Caddy
+    restart: unless-stopped
+
+  # Embeddings (bge-m3) calcolati sul server: il testo dei documenti non esce per l'indicizzazione.
+  # Ollama non ha autenticazione: MAI pubblicare la 11434 (Docker scavalca ufw).
+  # L'app lo raggiunge nella rete interna come http://ollama:11434
+  ollama:
+    ports: !reset []
     restart: unless-stopped
 
   app:
