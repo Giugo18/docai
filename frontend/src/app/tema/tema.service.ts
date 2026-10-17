@@ -1,39 +1,41 @@
-import { Injectable, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, signal } from '@angular/core';
 
-export type Tema = 'chiaro' | 'scuro' | 'sistema';
+/** La scelta esplicita dell'utente. null = non ha mai cliccato: si segue il sistema operativo */
+type Scelta = 'chiaro' | 'scuro';
 const CHIAVE = 'leggio18.tema';
 
 @Injectable({ providedIn: 'root' })
 export class TemaService {
-  private readonly sistemaScuro = window.matchMedia('(prefers-color-scheme: dark)');
-  readonly tema = signal<Tema>(this.leggi());
+  private readonly media = window.matchMedia('(prefers-color-scheme: dark)');
+  private readonly sistemaScuro = signal(this.media.matches);
+  private readonly scelta = signal<Scelta | null>(this.leggi());
+
+  /** true = tema scuro attivo (scelta dell'utente, oppure il sistema se non ha mai scelto) */
+  readonly scuro = computed(() => (this.scelta() ?? (this.sistemaScuro() ? 'scuro' : 'chiaro')) === 'scuro');
 
   constructor() {
-    // ogni volta che cambia la scelta: la salvo e la applico
+    // ogni volta che cambia: applico la classe "dark" alla pagina
     effect(() => {
-      const scelta = this.tema();
-      try { localStorage.setItem(CHIAVE, scelta); } catch { /* storage non disponibile */ }
-      this.applica();
+      const scuro = this.scuro();
+      document.documentElement.classList.toggle('dark', scuro);
+      document.documentElement.style.colorScheme = scuro ? 'dark' : 'light'; // scrollbar e campi nativi
     });
-    // con "sistema", segue il cambio di tema del sistema operativo anche a pagina aperta
-    this.sistemaScuro.addEventListener('change', () => this.applica());
+    // finché l'utente non sceglie, seguo il sistema anche a pagina aperta
+    this.media.addEventListener('change', e => this.sistemaScuro.set(e.matches));
   }
 
-  imposta(scelta: Tema): void {
-    this.tema.set(scelta);
+  /** L'interruttore: acceso ↔ spento. Da qui in poi vale la scelta dell'utente */
+  alterna(): void {
+    const nuova: Scelta = this.scuro() ? 'chiaro' : 'scuro';
+    this.scelta.set(nuova);
+    try { localStorage.setItem(CHIAVE, nuova); } catch { /* storage non disponibile */ }
   }
 
-  private applica(): void {
-    const scuro = this.tema() === 'scuro' || (this.tema() === 'sistema' && this.sistemaScuro.matches);
-    document.documentElement.classList.toggle('dark', scuro);
-    document.documentElement.style.colorScheme = scuro ? 'dark' : 'light'; // scrollbar e campi nativi
-  }
-
-  private leggi(): Tema {
+  private leggi(): Scelta | null {
     try {
       const salvato = localStorage.getItem(CHIAVE);
-      if (salvato === 'chiaro' || salvato === 'scuro' || salvato === 'sistema') return salvato;
+      if (salvato === 'chiaro' || salvato === 'scuro') return salvato;
     } catch { /* storage non disponibile */ }
-    return 'sistema';
+    return null;   // mai scelto, oppure il vecchio valore "sistema"
   }
 }

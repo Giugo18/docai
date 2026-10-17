@@ -1,29 +1,48 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import Keycloak from 'keycloak-js';
 import { KEYCLOAK_EVENT_SIGNAL, KeycloakEventType } from 'keycloak-angular';
-import { Tema, TemaService } from './tema/tema.service';
+import { TemaService } from './tema/tema.service';
 
 @Component({
   imports: [RouterOutlet, RouterLinkActive, RouterLink],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
+  host: {
+    '(document:click)': 'chiudiSeFuori($event)',     // clic fuori dal menu → si chiude
+    '(document:keydown.escape)': 'chiudiMenu()',      // Esc → si chiude
+  },
 })
 export class App {
   protected readonly title = signal('frontend');
   private readonly keycloak = inject(Keycloak);
   /** Con check-sso si può essere sull'app anche senza login (pagine /privacy e /termini) */
   protected readonly autenticato = !!this.keycloak.authenticated;
-  protected readonly nomeUtente = this.keycloak.tokenParsed?.['preferred_username'];
+  protected readonly nomeUtente: string = this.keycloak.tokenParsed?.['preferred_username'] ?? '';
+  protected readonly email: string = this.keycloak.tokenParsed?.['email'] ?? '';
+  protected readonly iniziale = this.nomeUtente.charAt(0).toUpperCase();
   readonly admin = this.autenticato && this.keycloak.hasRealmRole('admin');
   private readonly eventiKeycloak = inject(KEYCLOAK_EVENT_SIGNAL);
   protected readonly temi = inject(TemaService);
-  protected readonly scelte: { valore: Tema; etichetta: string }[] = [
-    { valore: 'chiaro', etichetta: 'Tema chiaro' },
-    { valore: 'scuro', etichetta: 'Tema scuro' },
-    { valore: 'sistema', etichetta: 'Tema del sistema' },
-  ];
+
+  protected readonly menuAperto = signal(false);
+  private readonly menuUtente = viewChild<ElementRef<HTMLElement>>('menuUtente');
+
+  protected apriChiudiMenu() {
+    this.menuAperto.update(aperto => !aperto);
+  }
+
+  protected chiudiMenu() {
+    this.menuAperto.set(false);
+  }
+
+  protected chiudiSeFuori(evento: MouseEvent) {
+    const menu = this.menuUtente()?.nativeElement;
+    if (menu && !menu.contains(evento.target as Node)) {
+      this.chiudiMenu();
+    }
+  }
 
   protected entra() {
     this.keycloak.login({ redirectUri: window.location.origin + '/documenti' });
