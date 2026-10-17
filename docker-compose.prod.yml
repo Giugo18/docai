@@ -46,11 +46,15 @@ services:
     restart: unless-stopped
 
   app:
-    build: !reset {}                                                  # in produzione NON si compila
-    image: ghcr.io/giugo18/docai-backend:${VERSIONE:-latest}          # si scarica da GHCR
+    build: !reset {}
+    image: ghcr.io/giugo18/docai-backend:${VERSIONE:-latest}
     ports: !reset []
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY:?manca GROQ_API_KEY nel file .env}
+      AI_CHAT: openai                 # le risposte le scrive Groq; Ollama fa solo gli embeddings
+      VALUTAZIONE_ATTIVA: "false"     # niente valutazione in produzione (consuma la quota Groq)
+      LOG_RAG: info
+      LOG_RICERCA: info
     restart: unless-stopped
 
   frontend:
