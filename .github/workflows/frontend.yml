@@ -42,7 +42,7 @@ jobs:
 
   immagine:
     name: Immagine Docker
-    needs: test                               # parte solo se i test sono verdi
+    needs: build                              # parte solo se la build è verde
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'   # non sulle PR
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -70,11 +70,11 @@ jobs:
       - name: Build e push (amd64 per i PC, arm64 per il server)
         uses: docker/build-push-action@v6
         with:
-          context: backend
+          context: frontend
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/giugo18/docai-backend:${{ github.sha }}
-            ghcr.io/giugo18/docai-backend:latest
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,scope=backend,mode=max
+            ghcr.io/giugo18/docai-frontend:${{ github.sha }}
+            ghcr.io/giugo18/docai-frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
