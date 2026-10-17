@@ -55,7 +55,7 @@ jobs:
     needs: test                               # parte solo se i test sono verdi
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'   # non sulle PR
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write                         # pubblicare su GHCR
@@ -63,6 +63,9 @@ jobs:
     steps:
       - name: Codice
         uses: actions/checkout@v4
+
+      - name: QEMU (per i pochi comandi dello stadio finale arm64)
+        uses: docker/setup-qemu-action@v3
 
       - name: Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -74,10 +77,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build e push
+      - name: Build e push (amd64 per i PC, arm64 per il server)
         uses: docker/build-push-action@v6
         with:
-          context: backend                    # usa backend/Dockerfile
+          context: backend
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/giugo18/docai-backend:${{ github.sha }}

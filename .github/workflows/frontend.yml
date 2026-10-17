@@ -42,10 +42,10 @@ jobs:
 
   immagine:
     name: Immagine Docker
-    needs: build                              # parte solo se la build è verde
+    needs: test                               # parte solo se i test sono verdi
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'   # non sulle PR
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write                         # pubblicare su GHCR
@@ -53,6 +53,9 @@ jobs:
     steps:
       - name: Codice
         uses: actions/checkout@v4
+
+      - name: QEMU (per i pochi comandi dello stadio finale arm64)
+        uses: docker/setup-qemu-action@v3
 
       - name: Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -62,15 +65,16 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}   # token automatico, nessun segreto da creare
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build e push
+      - name: Build e push (amd64 per i PC, arm64 per il server)
         uses: docker/build-push-action@v6
         with:
-          context: frontend
+          context: backend
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/giugo18/docai-frontend:${{ github.sha }}
-            ghcr.io/giugo18/docai-frontend:latest
-          cache-from: type=gha,scope=frontend
-          cache-to: type=gha,scope=frontend,mode=max
+            ghcr.io/giugo18/docai-backend:${{ github.sha }}
+            ghcr.io/giugo18/docai-backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
