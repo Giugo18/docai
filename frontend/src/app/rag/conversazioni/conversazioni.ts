@@ -7,10 +7,11 @@ import { ConversazioneDto, EsitoProposta, MessaggioVista, PropostaVista } from '
 import { messaggioErrore } from '../../errori/problem-detail';
 import { MarkdownPipe } from '../markdown.pipe';
 import { DocumentiApi } from '../../documenti/documenti-api';
+import { AvvisoAi } from '../../condivisi/avviso-ai/avviso-ai';
 
 @Component({
   selector: 'app-conversazioni',
-  imports: [DatePipe, RouterLink, MarkdownPipe],
+  imports: [DatePipe, RouterLink, MarkdownPipe, AvvisoAi],
   templateUrl: './conversazioni.html',
   styleUrl: './conversazioni.scss',
 })

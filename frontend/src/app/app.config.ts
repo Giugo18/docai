@@ -43,7 +43,7 @@ export function creaAppConfig(config: ConfigApp): ApplicationConfig {
           clientId: 'docai-frontend',
         },
         initOptions: {
-          onLoad: 'login-required',   // senza utente → redirect subito al login di Keycloak
+          onLoad: 'check-sso',        // controlla se c'è una sessione, ma NON obbliga al login: ci pensa la guard sulle rotte
           pkceMethod: 'S256',         // PKCE con SHA-256
           checkLoginIframe: false,    // niente iframe di controllo sessione: i browser bloccano i cookie di terze parti
         },

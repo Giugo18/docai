@@ -1,0 +1,77 @@
+<article class="mx-auto max-w-3xl px-4 py-8 space-y-6 leading-relaxed">
+  <header>
+    <h1 class="text-2xl font-semibold">Informativa sul trattamento dei dati personali</h1>
+    <p class="text-sm opacity-70">ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 ("GDPR") · Ultimo aggiornamento: {{ aggiornamento }}</p>
+  </header>
+
+  <section>
+    <h2 class="text-lg font-semibold">1. Titolare del trattamento</h2>
+    <p>[Nome Cognome], contattabile all'indirizzo <a class="underline" [href]="'mailto:' + contatto">{{ contatto }}</a>.
+      DocAI è un progetto personale, non commerciale, accessibile solo su invito.</p>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">2. Quali dati trattiamo</h2>
+    <ul class="list-disc pl-6 space-y-1">
+      <li><strong>Dati dell'account</strong>: nome, cognome, indirizzo email e nome utente, usati per l'accesso.</li>
+      <li><strong>Documenti caricati</strong> e il loro contenuto: testo estratto e rappresentazioni numeriche ("embeddings") usate per la ricerca.</li>
+      <li><strong>Domande, risposte e conversazioni</strong> con l'assistente.</li>
+      <li><strong>Dati tecnici</strong>: registri di sicurezza e di funzionamento (indirizzo IP, data e ora, identificativo della richiesta) e statistiche di utilizzo (numero di token consumati).</li>
+    </ul>
+    <p class="mt-2">Ti chiediamo di non caricare documenti con dati personali di altre persone se non hai il diritto di farlo,
+      né categorie particolari di dati (salute, opinioni politiche, ecc.).</p>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">3. Perché e su quale base</h2>
+    <ul class="list-disc pl-6 space-y-1">
+      <li>Fornirti il servizio richiesto: archivio, ricerca e risposte sui tuoi documenti (art. 6.1.b GDPR, esecuzione dell'accordo di utilizzo).</li>
+      <li>Garantire la sicurezza del servizio e prevenire abusi (art. 6.1.f GDPR, legittimo interesse del titolare).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">4. Come funziona l'intelligenza artificiale</h2>
+    <p>I documenti vengono analizzati e indicizzati <strong>sul server di DocAI</strong>: il loro testo completo non viene inviato a terzi per l'indicizzazione.
+      Quando fai una domanda, <strong>la domanda e i brani pertinenti dei tuoi documenti</strong> vengono inviati a Groq Inc. (vedi punto 5), che genera la risposta.
+      Le risposte sono prodotte automaticamente e <strong>possono contenere errori</strong>: verifica sempre le fonti citate.
+      Non vengono prese decisioni automatizzate che producono effetti giuridici nei tuoi confronti (art. 22 GDPR).</p>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">5. A chi vengono comunicati i dati</h2>
+    <p>I dati non vengono venduti né diffusi. Li trattano per nostro conto, come responsabili del trattamento (art. 28 GDPR):</p>
+    <ul class="list-disc pl-6 space-y-1">
+      <li><strong>Hetzner Online GmbH</strong> (Germania): hosting del server, situato nell'Unione europea.</li>
+      <li><strong>Groq Inc.</strong> (Stati Uniti): generazione delle risposte. Il trasferimento verso gli USA si basa sulle
+        <strong>clausole contrattuali standard</strong> approvate dalla Commissione europea (art. 46 GDPR).
+        Per contratto Groq non usa i dati per addestrare modelli e, con l'opzione <em>Zero Data Retention</em> attiva, non conserva domande e risposte.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">6. Per quanto tempo</h2>
+    <ul class="list-disc pl-6 space-y-1">
+      <li>Account, documenti e conversazioni: finché usi il servizio o fino alla tua richiesta di cancellazione.</li>
+      <li>Copie di sicurezza (backup): fino a 14 giorni.</li>
+      <li>Registri tecnici: per il tempo necessario alla sicurezza e al funzionamento del servizio, poi sovrascritti automaticamente.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">7. I tuoi diritti</h2>
+    <p>Puoi chiedere in qualsiasi momento l'accesso, la rettifica, la cancellazione, la limitazione, la portabilità dei tuoi dati
+      o opporti al trattamento (artt. 15-22 GDPR), scrivendo a <a class="underline" [href]="'mailto:' + contatto">{{ contatto }}</a>.
+      Rispondiamo entro 30 giorni. Puoi anche proporre reclamo al
+      <a class="underline" href="https://www.garanteprivacy.it" target="_blank" rel="noopener">Garante per la protezione dei dati personali</a>.</p>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold">8. Cookie e memorizzazione locale</h2>
+    <p>DocAI usa solo strumenti <strong>tecnici</strong>, necessari al funzionamento, per i quali non serve il consenso:</p>
+    <ul class="list-disc pl-6 space-y-1">
+      <li>cookie di sessione del servizio di autenticazione (Keycloak), per l'accesso sicuro;</li>
+      <li>memorizzazione locale nel browser della preferenza del tema (chiaro/scuro).</li>
+    </ul>
+    <p class="mt-2">Non usiamo cookie di profilazione, di analisi o di terze parti.</p>
+  </section>

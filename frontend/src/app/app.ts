@@ -13,8 +13,10 @@ import { Tema, TemaService } from './tema/tema.service';
 export class App {
   protected readonly title = signal('frontend');
   private readonly keycloak = inject(Keycloak);
+  /** Con check-sso si può essere sull'app anche senza login (pagine /privacy e /termini) */
+  protected readonly autenticato = !!this.keycloak.authenticated;
   protected readonly nomeUtente = this.keycloak.tokenParsed?.['preferred_username'];
-  readonly admin = this.keycloak.hasRealmRole('admin');
+  readonly admin = this.autenticato && this.keycloak.hasRealmRole('admin');
   private readonly eventiKeycloak = inject(KEYCLOAK_EVENT_SIGNAL);
   protected readonly temi = inject(TemaService);
   protected readonly scelte: { valore: Tema; etichetta: string }[] = [
@@ -22,6 +24,10 @@ export class App {
     { valore: 'scuro', etichetta: 'Tema scuro' },
     { valore: 'sistema', etichetta: 'Tema del sistema' },
   ];
+
+  protected entra() {
+    this.keycloak.login({ redirectUri: window.location.origin + '/documenti' });
+  }
 
   protected esci() {
     this.keycloak.logout({ redirectUri: window.location.origin });
@@ -39,9 +45,4 @@ export class App {
       }
     });
   }
-  /*protected caricaRiepilogo() {
-      this.api.riepilogo().subscribe(risposta => this.riepilogo.set(risposta));
-  }*/
-
-
 }

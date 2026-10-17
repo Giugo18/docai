@@ -1,8 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { ChatApi } from '../chat-api';
 import { messaggioErrore } from '../../errori/problem-detail';
+import { AvvisoAi } from '../../condivisi/avviso-ai/avviso-ai';
 
 @Component({
+  imports: [AvvisoAi],
   selector: 'app-pagina-chat',
   templateUrl: './pagina-chat.html',
 })

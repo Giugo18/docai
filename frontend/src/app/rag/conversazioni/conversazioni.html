@@ -100,10 +100,12 @@
       <textarea rows="2" [value]="domanda()" (input)="scrivi($event)" (keydown.enter)="$event.preventDefault(); invia()"
         placeholder="Es. Quanto ho speso per i biglietti da visita?" aria-label="La tua domanda"
         class="flex-1 resize-none rounded border border-gray-300 bg-white p-2 text-sm text-slate-900 focus:border-inchiostro focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-ambra"></textarea>
+       
       <button type="button" (click)="invia()" [disabled]="inCorso() || !domanda().trim()"
         class="self-end rounded bg-inchiostro px-4 py-2 text-white hover:bg-[#16304F] disabled:opacity-60 dark:bg-ambra dark:text-notte dark:hover:bg-[#F0B85F]">
         {{ inCorso() ? 'Cerco…' : 'Chiedi' }}
       </button>
     </div>
+     <app-avviso-ai />
   </section>
 </div>

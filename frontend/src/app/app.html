@@ -1,3 +1,4 @@
+<div class="flex min-h-screen flex-col">
 <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-notte">
     <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-6">
@@ -5,6 +6,7 @@
                 <img src="logo-orizzontale.svg" alt="Leggio18" class="h-8 dark:hidden">
                 <img src="logo-orizzontale-scuro.svg" alt="Leggio18" class="h-8 hidden dark:block">
             </a>
+            @if (autenticato) {
             <nav class="flex gap-4 text-sm font-medium">
                 <a routerLink="/documenti" routerLinkActive ariaCurrentWhenActive="page"
                     class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Documenti</a>
@@ -17,6 +19,7 @@
                     class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Amministrazione</a>
                 }
             </nav>
+            }
         </div>
         <div class="flex items-center gap-3">
             <!-- interruttore del tema: tre pulsanti, quello attivo ha aria-pressed=true -->
@@ -39,6 +42,7 @@
                 </button>
                 }
             </div>
+            @if (autenticato) {
             <span class="text-sm text-slate-600 dark:text-slate-300">
                 Ciao <strong class="font-semibold text-slate-900 dark:text-slate-100">{{ nomeUtente }}</strong>
             </span>
@@ -50,9 +54,21 @@
                 class="cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
                 Cambia password
             </button>
+            } @else {
+            <button type="button" (click)="entra()"
+                class="cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+                Accedi
+            </button>
+            }
         </div>
     </div>
 </header>
-<main class="mx-auto max-w-5xl px-4 py-6">
+<main class="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
     <router-outlet />
 </main>
+<footer class="border-t border-slate-200 py-4 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+    <a routerLink="/privacy" class="hover:underline">Privacy</a>
+    <span class="mx-2" aria-hidden="true">·</span>
+    <a routerLink="/termini" class="hover:underline">Termini d'uso</a>
+</footer>
+</div>
