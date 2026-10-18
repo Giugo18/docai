@@ -1,25 +1,26 @@
 <div class="flex min-h-screen flex-col">
 <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-notte">
-    <div class="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-6">
-            <a routerLink="/" class="flex items-center">
-                <img src="logo-orizzontale.svg" alt="Leggio18" class="h-8 dark:hidden">
-                <img src="logo-orizzontale-scuro.svg" alt="Leggio18" class="h-8 hidden dark:block">
-            </a>
-            @if (autenticato) {
-            <nav class="flex gap-4 text-sm font-medium">
-                <a routerLink="/documenti" routerLinkActive ariaCurrentWhenActive="page"
-                    class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Documenti</a>
-                <a routerLink="/chat" routerLinkActive ariaCurrentWhenActive="page"
-                    class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Chat</a>
-                <a routerLink="/chiedi" routerLinkActive ariaCurrentWhenActive="page"
-                    class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Chiedi</a>
-            </nav>
-            }
-        </div>
+    <!-- Una sola riga che va a capo: l'ordine cambia con order-* (telefono: logo, controlli / link sotto) -->
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+        <a routerLink="/" class="order-1 flex items-center">
+            <img src="logo-orizzontale.svg" alt="Leggio18" class="h-8 dark:hidden">
+            <img src="logo-orizzontale-scuro.svg" alt="Leggio18" class="h-8 hidden dark:block">
+        </a>
 
-        <div class="flex items-center gap-3">
-            <!-- tema: un solo interruttore, acceso = scuro -->
+        @if (autenticato) {
+        <!-- telefono: seconda riga larga tutto lo schermo; da sm in su: in mezzo, sulla stessa riga -->
+        <nav class="order-3 flex w-full gap-5 text-sm font-medium sm:order-2 sm:w-auto sm:gap-4">
+            <a routerLink="/documenti" routerLinkActive ariaCurrentWhenActive="page"
+                class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Documenti</a>
+            <a routerLink="/chat" routerLinkActive ariaCurrentWhenActive="page"
+                class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Chat</a>
+            <a routerLink="/chiedi" routerLinkActive ariaCurrentWhenActive="page"
+                class="text-slate-600 hover:text-inchiostro aria-[current=page]:text-inchiostro dark:text-slate-300 dark:hover:text-ambra dark:aria-[current=page]:text-ambra">Chiedi</a>
+        </nav>
+        }
+
+        <!-- controlli: sempre a destra (ml-auto), sulla prima riga anche sul telefono -->
+        <div class="order-2 ml-auto flex items-center gap-3 sm:order-3">
             <button type="button" role="switch" [attr.aria-checked]="temi.scuro()" aria-label="Tema scuro"
                 [title]="temi.scuro() ? 'Passa al tema chiaro' : 'Passa al tema scuro'" (click)="temi.alterna()"
                 class="cursor-pointer rounded-lg border border-slate-300 p-2 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
@@ -31,19 +32,19 @@
             </button>
 
             @if (autenticato) {
-            <!-- menu utente: si apre cliccando sul nome -->
             <div class="relative" #menuUtente>
                 <button type="button" (click)="apriChiudiMenu()" aria-haspopup="menu" [attr.aria-expanded]="menuAperto()" aria-controls="menu-utente"
+                    [attr.aria-label]="'Menu di ' + nomeUtente"
                     class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 py-1 pl-1 pr-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
                     <span aria-hidden="true" class="flex h-7 w-7 items-center justify-center rounded-md bg-inchiostro text-xs font-semibold text-white dark:bg-ambra dark:text-notte">{{ iniziale }}</span>
-                    <span>{{ nomeUtente }}</span>
+                    <span class="hidden sm:inline">{{ nomeUtente }}</span>   <!-- sul telefono basta l'iniziale -->
                     <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                         class="transition-transform" [class.rotate-180]="menuAperto()"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
 
                 @if (menuAperto()) {
                 <div id="menu-utente" role="menu" aria-label="Menu utente"
-                    class="absolute right-0 z-20 mt-2 w-60 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-notte">
+                    class="absolute right-0 z-20 mt-2 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-notte">
                     <div class="border-b border-slate-200 px-4 py-2 dark:border-slate-700">
                         <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ nomeUtente }}</p>
                         @if (email) {
