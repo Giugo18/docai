@@ -103,17 +103,38 @@ public class DocumentoService {
     }
 
 
-    /*
-    Non serve repository.save(...). Dentro @Transactional l’entità è “managed” e JPA,
-    al commit, si accorge da solo della modifica e fa l’UPDATE (si chiama dirty checking).
-    Il findByIdAndProprietario mantiene la protezione IDOR: anna non può rinominare i documenti di mario, e riceve 404.
-     */
+    /** Scrive solo nome_file: non può più cancellare lo stato dell'indicizzazione (e viceversa). */
     @Transactional
     public DocumentoDto rinomina(UUID id, String nuovoNome, String proprietario) {
-        Documento documento = repository.findByIdAndProprietario(id, proprietario)
+        if (repository.rinomina(id, proprietario, nuovoNome) == 0) {
+            throw new DocumentoNonTrovatoException(id);          // non esiste o non è suo (IDOR)
+        }
+        return repository.findById(id)                            // riletto dopo l'UPDATE
+                .map(DocumentoDto::da)
                 .orElseThrow(() -> new DocumentoNonTrovatoException(id));
-        documento.rinomina(nuovoNome);
-        return DocumentoDto.da(documento);
+    }
+
+    @Transactional
+    public void iniziaIndicizzazione(UUID id) {
+        repository.aggiornaStato(id, StatoDocumento.IN_INDICIZZAZIONE);
+    }
+
+    @Transactional
+    public void segnaIndicizzato(UUID id) {
+        repository.segnaIndicizzato(id, StatoDocumento.INDICIZZATO);
+    }
+
+    @Transactional
+    public void segnaErrore(UUID id) {
+        repository.segnaErrore(id, StatoDocumento.ERRORE);
+    }
+
+    @Transactional
+    public void elimina(UUID id, String proprietario) {
+        if (repository.eliminaDelProprietario(id, proprietario) == 0) {
+            throw new DocumentoNonTrovatoException(id);          // 404 se non è suo
+        }
+        eventi.publishEvent(new DocumentoEliminato(id));          // chunk: listener BEFORE_COMMIT; contenuto: ON DELETE CASCADE
     }
 
     @Transactional(readOnly = true)
@@ -126,27 +147,5 @@ public class DocumentoService {
         return repository.findById(id)
                 .filter(d -> d.getProprietario().equals(proprietario))
                 .orElseThrow(() -> new DocumentoNonTrovatoException(id));
-    }
-
-    @Transactional
-    public void iniziaIndicizzazione(UUID id) {
-        repository.findById(id).ifPresent(Documento::iniziaIndicizzazione);
-    }
-
-    @Transactional
-    public void segnaIndicizzato(UUID id) {
-        repository.findById(id).ifPresent(Documento::segnaIndicizzato);
-    }
-
-    @Transactional
-    public void segnaErrore(UUID id) {
-        repository.findById(id).ifPresent(Documento::segnaErrore);
-    }
-
-    @Transactional
-    public void elimina(UUID id, String proprietario) {
-        Documento documento = trovaDelProprietario(id, proprietario);   // 404 se non è suo
-        repository.delete(documento);                                   // contenuto: ON DELETE CASCADE
-        eventi.publishEvent(new DocumentoEliminato(id));                // chunk: listener BEFORE_COMMIT
     }
 }

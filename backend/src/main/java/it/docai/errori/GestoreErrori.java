@@ -152,4 +152,11 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         problema.setProperty("idRichiesta", MDC.get(IdRichiestaFilter.CHIAVE_MDC));
         return problema;
     }
+
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    public ProblemDetail modificatoNelFrattempo(org.springframework.dao.OptimisticLockingFailureException e) {
+        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Il documento è stato modificato nel frattempo: ricarica la pagina e riprova");
+        return conId(problema);
+    }
 }

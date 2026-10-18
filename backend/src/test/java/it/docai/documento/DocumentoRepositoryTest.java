@@ -24,10 +24,11 @@ class DocumentoRepositoryTest {
         var a = Documento.nuovo("a.pdf", "application/pdf", 100, "mario");
         var b = Documento.nuovo("b.pdf", "application/pdf", 250, "mario");
         var c = Documento.nuovo("c.pdf", "application/pdf", 1_000, "mario");
-        c.segnaIndicizzato();
         var diAnna = Documento.nuovo("d.pdf", "application/pdf", 5_000, "anna");
         repository.saveAll(List.of(a, b, c, diAnna));
         repository.flush();
+        // lo stato si cambia come fa l'applicazione: UPDATE mirata, dopo che la riga esiste
+        repository.segnaIndicizzato(c.getId(), StatoDocumento.INDICIZZATO);
 
         List<RigaRiepilogo> righe = repository.riepilogoPerStato("mario");
 

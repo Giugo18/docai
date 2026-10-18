@@ -34,7 +34,14 @@ public class Documento {
     @Column(name = "tentativi_indicizzazione", nullable = false)
     private int tentativiIndicizzazione;
 
-
+    /**
+     * Optimistic locking: JPA aggiunge "AND versione = ?" a ogni UPDATE fatto dall'entità.
+     * Se nel frattempo qualcuno ha modificato la riga, il salvataggio fallisce
+     * (ObjectOptimisticLockingFailureException) invece di cancellare la sua modifica.
+     * Long e non long: null = entità nuova, così save() fa una INSERT senza SELECT prima.
+     */
+    @Version
+    private Long versione;
 
     protected Documento() {
         // richiesto da JPA
@@ -52,32 +59,16 @@ public class Documento {
         return d;
     }
 
-    public void iniziaIndicizzazione() { this.stato = StatoDocumento.IN_INDICIZZAZIONE; }
-    public UUID getId()               { return id; }
-    public String getNomeFile()       { return nomeFile; }
-    public String getContentType()    { return contentType; }
-    public long getDimensione()       { return dimensione; }
-    public String getProprietario()   { return proprietario; }
-    public StatoDocumento getStato()  { return stato; }
-    public Instant getCaricatoIl()    { return caricatoIl; }
+    // Niente metodi che modificano nome o stato: le modifiche passano dalle UPDATE mirate
+    // di DocumentoRepository, che toccano solo le loro colonne (vedi "lost update" nel manuale).
 
-    public void rinomina(String nuovoNome) {
-        this.nomeFile = nuovoNome;
-    }
-
-    public void segnaIndicizzato() {
-        this.stato = StatoDocumento.INDICIZZATO;
-        this.tentativiIndicizzazione = 0;            // successo: si riparte da zero
-    }
-
-    public void segnaErrore() {
-        this.stato = StatoDocumento.ERRORE;
-        this.tentativiIndicizzazione++;              // un fallimento in più: oltre il massimo il batch smette
-    }
-
-    public int getTentativiIndicizzazione() {
-        return tentativiIndicizzazione;
-    }
-
-
+    public UUID getId()                      { return id; }
+    public String getNomeFile()              { return nomeFile; }
+    public String getContentType()           { return contentType; }
+    public long getDimensione()              { return dimensione; }
+    public String getProprietario()          { return proprietario; }
+    public StatoDocumento getStato()         { return stato; }
+    public Instant getCaricatoIl()           { return caricatoIl; }
+    public int getTentativiIndicizzazione()  { return tentativiIndicizzazione; }
+    public Long getVersione()                { return versione; }
 }
