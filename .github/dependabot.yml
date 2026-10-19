@@ -1,0 +1,11 @@
+# Dependabot: apre una pull request quando escono nuove versioni delle dipendenze
+version: 2
+updates:
+  # Action usate nei workflow (checkout, setup-java, docker/*, ...)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:                 # tutte le Action in una sola pull request
+        patterns: ["*"]
