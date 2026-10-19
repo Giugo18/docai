@@ -34,4 +34,11 @@ class CitazioniTest {
         assertThat(Citazioni.normalizza(testo)).isEqualTo("Totale 451,40 € [Fonte 1].");
         assertThat(Citazioni.numeri(testo)).containsExactly(1);
     }
+
+    @Test
+    void riconosceLeCitazioniInSpagnoloEInglese() {
+        assertThat(Citazioni.normalizza("il cerchio [Fuente 3] e la storia [Source 4]"))
+                .isEqualTo("il cerchio [Fonte 3] e la storia [Fonte 4]");
+        assertThat(Citazioni.numeri("vedi [Fuente 3]")).containsExactly(3);
+    }
 }

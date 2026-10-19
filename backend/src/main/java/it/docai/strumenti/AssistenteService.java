@@ -46,18 +46,24 @@ public class AssistenteService {
 
     /** Come chiedi, ma con le fonti raccolte dai tool: serve alla valutazione. */
     public RispostaDocumenti chiediConFonti(String domanda, String proprietario) {
+        return chiediConFonti(domanda, proprietario, List.of());
+    }
+
+    /** Con una conversazione precedente: la valutazione la usa per i casi con "prima". */
+    public RispostaDocumenti chiediConFonti(String domanda, String proprietario, List<Message> storia) {
         var fonti = new CopyOnWriteArrayList<Fonte>();
         var contesto = ContestoStrumenti.di(proprietario, null, fonti, new ArrayList<Proposta>());
         contesto.put(ConsumoService.CHIAVE_OPERAZIONE, "ASSISTENTE");   // per il registro dei consumi
         try {
-            String risposta = chatClient.prompt()
+            String risposta = Citazioni.normalizza(chatClient.prompt()
                     .system(regole)
+                    .messages(storia)                                   // vuota = domanda singola
                     .user(domanda)
                     .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
                     .toolContext(contesto)
                     .call()
-                    .content();
-            return new RispostaDocumenti(Citazioni.normalizza(risposta), List.copyOf(fonti));
+                    .content());
+            return new RispostaDocumenti(risposta, fontiDaMostrare(risposta, fonti));
         } catch (RuntimeException e) {
             throw (RuntimeException) ModelloOccupatoException.traduci(e);
         }
@@ -66,14 +72,12 @@ public class AssistenteService {
     public Flux<EventoRag> rispondiInConversazione(UUID conversazioneId, String domanda, String proprietario) {
         Conversazione c = conversazioni.trova(conversazioneId, proprietario);      // 404 se non è mia
         List<Messaggio> storia = conversazioni.ultimi(c.getId());                  // PRIMA di salvare la nuova
-        //conversazioni.registraDomanda(c.getId(), domanda);
 
         var fonti = new CopyOnWriteArrayList<Fonte>();                             // la riempiono i tool
         var risposta = new StringBuilder();
         var proposte = new CopyOnWriteArrayList<Proposta>();
         var contesto = ContestoStrumenti.di(proprietario, c.getDocumentoId(), fonti, proposte);
         contesto.put(ConsumoService.CHIAVE_OPERAZIONE, "ASSISTENTE");             // per il registro dei consumi
-
 
         Flux<EventoRag> testo = chatClient.prompt()
                 .system(regole)
@@ -89,14 +93,23 @@ public class AssistenteService {
 
         Flux<EventoRag> fine = Flux.defer(() -> {
             String completa = Citazioni.normalizza(risposta.toString());
-            conversazioni.registraDomanda(c.getId(), domanda);  // ← spostata qui
-            conversazioni.registraRisposta(c.getId(), completa, List.copyOf(fonti));
+            List<Fonte> mostrate = fontiDaMostrare(completa, fonti);
+            conversazioni.registraDomanda(c.getId(), domanda);
+            conversazioni.registraRisposta(c.getId(), completa, mostrate);
             return Flux.concat(
-                    Flux.just(EventoRag.fonti(List.copyOf(fonti))),
+                    Flux.just(EventoRag.fonti(mostrate)),
                     Flux.fromIterable(List.copyOf(proposte)).map(EventoRag::proposta));
         });
 
         return Flux.concat(testo, fine).contextCapture();
+    }
+
+    /**
+     * Se la risposta è "Non trovo", i passaggi letti dai tool non sono serviti: mostrarli farebbe credere
+     * che quei documenti parlino della domanda. In quel caso nessuna fonte, né a schermo né nello storico.
+     */
+    private static List<Fonte> fontiDaMostrare(String risposta, List<Fonte> fonti) {
+        return risposta != null && risposta.strip().equals(RagService.NIENTE) ? List.of() : List.copyOf(fonti);
     }
 
     private static List<Message> cronologia(List<Messaggio> storia) {

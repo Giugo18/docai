@@ -28,3 +28,6 @@ export interface Proposta {
   nomeAttuale: string;
   nuovoNome: string;
 }
+
+/** La frase con cui il backend dice che nei documenti non c'è la risposta (RagService.NIENTE). */
+export const NON_TROVATO = 'Non trovo questa informazione nei tuoi documenti.';

@@ -11,12 +11,12 @@ public final class Citazioni {
     private static final Pattern NORMALIZZATA = Pattern.compile("\\[Fonte (\\d+)]");
     private static final Pattern INVISIBILI = Pattern.compile("[\\u200B-\\u200D\\u2060\\uFEFF]");
 
-
-
-    // 【Fonte 2】, [[Fonte 2]], [ Fonte 2 ], 【【Fonte 2】】 → [Fonte 2]
+    // 【Fonte 2】, [[Fonte 2]], [ Fonte 2 ], 【【Fonte 2】】, [Fuente 2], [Source 2] → [Fonte 2]
+    // (con documenti in un'altra lingua il modello a volte scrive "Fuente" o "Source")
     private static final Pattern CITAZIONE = Pattern.compile(
-            "[\\[【]+\\s*(?:fonte\\s*)?(\\d+)(?:\\s*†[^\\]】]*)?\\s*[\\]】]+",
+            "[\\[【]+\\s*(?:(?:fonte|fuente|source)\\s*)?(\\d+)(?:\\s*†[^\\]】]*)?\\s*[\\]】]+",
             Pattern.UNICODE_CHARACTER_CLASS | Pattern.CASE_INSENSITIVE);
+
     private Citazioni() {
     }
 

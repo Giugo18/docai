@@ -1,9 +1,9 @@
-import { Component, inject, input, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, input, OnDestroy, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { RagApi } from '../rag-api';
-import { Fonte } from '../rag.model';
+import { Fonte, NON_TROVATO } from '../rag.model';
 import { messaggioErrore } from '../../errori/problem-detail';
 
 @Component({
@@ -24,6 +24,10 @@ export class ChiediDocumenti implements OnDestroy {
   protected readonly inCorso = signal(false);
   protected readonly errore = signal('');
   private richiesta?: Subscription;
+
+  /** Se la risposta è "Non trovo", i passaggi trovati non sono serviti: mostrarli sarebbe fuorviante. */
+  protected readonly fontiVisibili = computed(() =>
+    this.risposta().trim() === NON_TROVATO ? [] : this.fonti());
 
   scrivi(evento: Event) {
     this.domanda.set((evento.target as HTMLTextAreaElement).value);

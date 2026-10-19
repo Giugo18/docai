@@ -24,10 +24,10 @@
     </div>
   }
 
-  @if (fonti().length) {
+  @if (fontiVisibili().length) {
     <h3 class="mt-4 text-sm font-medium text-gray-600 dark:text-slate-400">Fonti</h3>
     <ul class="mt-2 space-y-2">
-      @for (f of fonti(); track f.numero) {
+      @for (f of fontiVisibili(); track f.numero) {
         <li class="rounded border border-gray-100 p-2 text-sm dark:border-slate-800">
           <div class="flex flex-wrap items-baseline gap-x-2">
             <span class="font-medium text-gray-500 dark:text-slate-400">[{{ f.numero }}]</span>

@@ -5,6 +5,9 @@ import it.docai.agente.RispostaAgente;
 import it.docai.strumenti.AssistenteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -40,7 +43,9 @@ public class Valutazione {
         this.agente = agente;
         this.pausa = pausa;
         this.casi = json.readValue(file.getInputStream(), new TypeReference<List<CasoDiProva>>() {});
-        log.info("Valutazione attiva: {} casi di prova caricati, pausa {} tra un caso e l'altro", casi.size(), pausa);
+        int esecuzioni = casi.stream().mapToInt(CasoDiProva::ripeti).sum();
+        log.info("Valutazione attiva: {} casi di prova caricati ({} esecuzioni), pausa {} tra un caso e l'altro",
+                casi.size(), esecuzioni, pausa);
     }
 
     /** Quello che serve alla valutazione, qualunque sia il percorso: un adattatore tra i tre tipi di risposta. */
@@ -55,44 +60,15 @@ public class Valutazione {
 
     public ReportValutazione esegui(String proprietario) {
         var esiti = new ArrayList<EsitoCaso>();
+        tutti:
         for (CasoDiProva caso : casi) {
-            if (!esiti.isEmpty() && !aspetta()) {
-                break;                                   // thread interrotto: mi fermo con quello che ho
+            for (int giro = 1; giro <= caso.ripeti(); giro++) {
+                if (!esiti.isEmpty() && !aspetta()) {
+                    break tutti;                         // thread interrotto: mi fermo con quello che ho
+                }
+                String etichetta = caso.ripeti() > 1 ? caso.etichetta() + " #" + giro : caso.etichetta();
+                esiti.add(valuta(caso, etichetta, proprietario));
             }
-            long inizio = System.currentTimeMillis();
-            Esecuzione r;
-            try {
-                r = rispondi(caso, proprietario);
-            } catch (RuntimeException e) {
-                long durata = System.currentTimeMillis() - inizio;
-                log.warn("Valutazione: {} | ERRORE {} | {} ms", caso.etichetta(), e.getMessage(), durata);
-                esiti.add(EsitoCaso.errore(caso.etichetta(), e.getMessage(), durata));
-                continue;
-            }
-            long durata = System.currentTimeMillis() - inizio;
-
-            Set<Integer> numeriDocumento = r.fonti().stream()
-                    .filter(f -> f.nomeFile().equals(caso.documento()))
-                    .map(Fonte::numero)
-                    .collect(Collectors.toSet());
-            Integer posizione = numeriDocumento.stream().min(Integer::compare).orElse(null);   // la migliore
-
-            boolean senzaFonte = caso.nonDeveTrovare() || caso.documento() == null;   // niente da trovare
-            boolean fonteTrovata = senzaFonte || posizione != null;
-
-            boolean entroIPassi = caso.maxPassi() == null
-                    || (r.passi() != null && r.passi() <= caso.maxPassi() && !r.limiteRaggiunto());
-            boolean corretta = corretta(caso, r.risposta()) && entroIPassi;
-
-            Set<Integer> citate = Citazioni.numeri(r.risposta());
-            Set<Integer> inventate = Citazioni.inventate(r.risposta(), r.fonti().stream().map(Fonte::numero).toList());
-            boolean fonteCitata = senzaFonte || citate.stream().anyMatch(numeriDocumento::contains);
-
-            esiti.add(new EsitoCaso(caso.etichetta(), fonteTrovata, posizione, fonteCitata, inventate,
-                    corretta, durata, r.passi(), r.risposta()));
-            log.info("Valutazione: {} | fonte={} pos={} citata={} inventate={} passi={} risposta={} | {} ms",
-                    caso.etichetta(), fonteTrovata ? "OK" : "NO", posizione, fonteCitata ? "OK" : "NO",
-                    inventate, r.passi(), corretta ? "OK" : "NO", durata);
         }
 
         int fonti = conta(esiti, EsitoCaso::fonteTrovata);
@@ -105,13 +81,65 @@ public class Valutazione {
         return new ReportValutazione(esiti.size(), fonti, citate, valide, corrette, medio, esiti);
     }
 
+    /** Una esecuzione di un caso: risposta, controlli, riga di log. */
+    private EsitoCaso valuta(CasoDiProva caso, String etichetta, String proprietario) {
+        long inizio = System.currentTimeMillis();
+        Esecuzione r;
+        try {
+            r = rispondi(caso, proprietario);
+        } catch (RuntimeException e) {
+            long durata = System.currentTimeMillis() - inizio;
+            log.warn("Valutazione: {} | ERRORE {} | {} ms", etichetta, e.getMessage(), durata);
+            return EsitoCaso.errore(etichetta, e.getMessage(), durata);
+        }
+        long durata = System.currentTimeMillis() - inizio;
+
+        Set<Integer> numeriDocumento = r.fonti().stream()
+                .filter(f -> f.nomeFile().equals(caso.documento()))
+                .map(Fonte::numero)
+                .collect(Collectors.toSet());
+        Integer posizione = numeriDocumento.stream().min(Integer::compare).orElse(null);   // la migliore
+
+        boolean senzaFonte = caso.nonDeveTrovare() || caso.documento() == null;   // niente da trovare
+        boolean fonteTrovata = senzaFonte || posizione != null;
+
+        boolean entroIPassi = caso.maxPassi() == null
+                || (r.passi() != null && r.passi() <= caso.maxPassi() && !r.limiteRaggiunto());
+        boolean corretta = corretta(caso, r.risposta()) && entroIPassi;
+
+        Set<Integer> citate = Citazioni.numeri(r.risposta());
+        Set<Integer> inventate = Citazioni.inventate(r.risposta(), r.fonti().stream().map(Fonte::numero).toList());
+        boolean fonteCitata = senzaFonte || citate.stream().anyMatch(numeriDocumento::contains);
+
+        log.info("Valutazione: {} | fonte={} pos={} citata={} inventate={} passi={} risposta={} | {} ms",
+                etichetta, fonteTrovata ? "OK" : "NO", posizione, fonteCitata ? "OK" : "NO",
+                inventate, r.passi(), corretta ? "OK" : "NO", durata);
+        return new EsitoCaso(etichetta, fonteTrovata, posizione, fonteCitata, inventate,
+                corretta, durata, r.passi(), r.risposta());
+    }
+
     private Esecuzione rispondi(CasoDiProva caso, String proprietario) {
         String chi = caso.utenteVuoto() ? UTENTE_VUOTO : proprietario;
         return switch (caso.modalita()) {
             case RAG -> Esecuzione.di(rag.chiedi(caso.domanda(), null, chi));
-            case ASSISTENTE -> Esecuzione.di(assistente.chiediConFonti(caso.domanda(), chi));
+            case ASSISTENTE -> Esecuzione.di(assistente.chiediConFonti(caso.domanda(), chi, storia(caso, chi)));
             case AGENTE -> Esecuzione.di(agente.esegui(caso.domanda(), chi));
         };
+    }
+
+    /**
+     * La conversazione prima della domanda: le domande in "prima" vengono fatte davvero, una dopo l'altra,
+     * e la storia si costruisce con le risposte vere del modello, come succede nell'app.
+     */
+    private List<Message> storia(CasoDiProva caso, String chi) {
+        var storia = new ArrayList<Message>();
+        for (String precedente : caso.prima()) {
+            var risposta = assistente.chiediConFonti(precedente, chi, List.copyOf(storia));
+            storia.add(new UserMessage(precedente));
+            storia.add(new AssistantMessage(risposta.risposta()));
+            aspetta();                                   // anche queste chiamate contano per il limite di Groq
+        }
+        return storia;
     }
 
     /** Tutte le paroleAttese, almeno una tra almenoUna, nessuna tra nonDeveContenere. */
