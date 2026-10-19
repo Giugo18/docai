@@ -30,6 +30,11 @@ public class ConsumoService {
 
     /** Registra i token di una risposta del modello. Non deve mai far fallire la richiesta dell'utente. */
     public void registra(String proprietario, String utente, String operazione, ChatResponse risposta) {
+        // chiamata fallita (chiave non valida, Groq irraggiungibile...): nessuna risposta, niente da registrare
+        if (risposta == null || risposta.getMetadata() == null || risposta.getMetadata().getUsage() == null) {
+            log.debug("Nessun consumo da registrare per {} ({}): risposta assente", proprietario, operazione);
+            return;
+        }
         try {
             var uso = risposta.getMetadata().getUsage();
             String modello = risposta.getMetadata().getModel();

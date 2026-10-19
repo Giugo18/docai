@@ -1,5 +1,7 @@
 package it.docai.errori;
 
+import com.openai.errors.OpenAIException;
+import com.openai.errors.RateLimitException;
 import it.docai.config.IdRichiestaFilter;
 import it.docai.documento.DocumentoNonTrovatoException;
 import it.docai.documento.ErroreUpload;
@@ -12,6 +14,7 @@ import it.docai.strumenti.ModelloOccupatoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -24,6 +27,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -45,6 +49,24 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
         log.error("Errore imprevisto", ex);   // lo stack trace va nel log, non al client
         return conId(ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Si è verificato un errore interno"));
+    }
+
+    /**
+     * Nello streaming gli errori del client OpenAI (Groq) arrivano avvolti in una CompletionException:
+     * Spring guarda prima l'eccezione esterna, che finirebbe in erroreImprevisto. Qui si guarda la causa.
+     */
+    @ExceptionHandler(CompletionException.class)
+    public ProblemDetail completamentoFallito(CompletionException ex) {
+        if (ex.getCause() instanceof OpenAIException causa) {
+            return servizioAi(causa);
+        }
+        return erroreImprevisto(ex);
+    }
+
+    /** Chiamata sincrona (call()): l'eccezione del client OpenAI arriva senza involucro. */
+    @ExceptionHandler(OpenAIException.class)
+    public ProblemDetail servizioAiFallito(OpenAIException ex) {
+        return servizioAi(ex);
     }
 
     @ExceptionHandler(UploadNonValidoException.class)
@@ -140,6 +162,34 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ModelloOccupatoException.class)
     ProblemDetail modelloOccupato(ModelloOccupatoException e) {
+        return assistenteOccupato();
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ProblemDetail modificatoNelFrattempo(OptimisticLockingFailureException e) {
+        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Il documento è stato modificato nel frattempo: ricarica la pagina e riprova");
+        return conId(problema);
+    }
+
+    /**
+     * Groq ha risposto con un errore o non è raggiungibile. Il troppo traffico (429) ha già il suo messaggio;
+     * il resto (chiave non valida, servizio giù, rete) per l'utente è "servizio AI non disponibile".
+     */
+    private ProblemDetail servizioAi(OpenAIException causa) {
+        if (causa instanceof RateLimitException) {
+            log.warn("Limite di richieste del servizio AI: {}", causa.getMessage());
+            return assistenteOccupato();
+        }
+        log.error("Servizio AI non disponibile: {}", causa.toString());   // il messaggio basta: lo stack è tutto del client HTTP
+        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
+                "Il servizio di intelligenza artificiale non è disponibile in questo momento: riprova tra qualche minuto.");
+        problema.setTitle("Servizio AI non disponibile");
+        problema.setType(URI.create("https://docai.it/errori/servizio-ai-non-disponibile"));
+        return conId(problema);
+    }
+
+    private static ProblemDetail assistenteOccupato() {
         var pd = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
                 "L'assistente ha raggiunto il limite di richieste: riprova tra un minuto, "
                         + "oppure apri una nuova conversazione.");
@@ -151,12 +201,5 @@ public class GestoreErrori extends ResponseEntityExceptionHandler {
     private static ProblemDetail conId(ProblemDetail problema) {
         problema.setProperty("idRichiesta", MDC.get(IdRichiestaFilter.CHIAVE_MDC));
         return problema;
-    }
-
-    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
-    public ProblemDetail modificatoNelFrattempo(org.springframework.dao.OptimisticLockingFailureException e) {
-        var problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                "Il documento è stato modificato nel frattempo: ricarica la pagina e riprova");
-        return conId(problema);
     }
 }
