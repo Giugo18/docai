@@ -30,10 +30,10 @@ jobs:
 
     steps:
       - name: Codice
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -45,7 +45,7 @@ jobs:
 
       - name: Report dei test (solo se falliscono)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report-test
           path: backend/target/surefire-reports/
@@ -62,23 +62,23 @@ jobs:
 
     steps:
       - name: Codice
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: QEMU (per i pochi comandi dello stadio finale arm64)
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login a GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build e push (amd64 per i PC, arm64 per il server)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: backend
           platforms: linux/amd64,linux/arm64
