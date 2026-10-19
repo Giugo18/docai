@@ -24,8 +24,6 @@ spring:
           # Validazione delle firme JWT con le chiavi pubbliche di Keycloak
           jwk-set-uri: ${JWK_SET_URI:http://localhost:8180/realms/docai/protocol/openid-connect/certs}
           audiences: docai-api
-
-# ===== Settimana 6+: decommenta e verifica i nomi delle proprietà sulla documentazione di Spring AI 2.0 =====
   ai:
     model:
       chat: ${AI_CHAT:openai}          # chi genera il testo: ollama (locale) oppure openai (= Groq)
@@ -52,24 +50,14 @@ spring:
     vectorstore:
       pgvector:
         initialize-schema: false      # la tabella la crea Flyway
-        dimensions: 768
+        dimensions: 1024              # bge-m3 produce vettori da 1024 (colonna vector(1024), migration V4)
         distance-type: COSINE_DISTANCE
         index-type: HNSW
     mcp:
       server:
         name: docai
         version: 0.1.0
-        protocol: STREAMABLE      # endpoint predefinito: /mcp
-#          model: llama3.2
-#      embedding:
-#        options:
-#          model: nomic-embed-text
-#    vectorstore:
-#      pgvector:
-#        initialize-schema: true
-#        dimensions: 768           # dimensione degli embedding di nomic-embed-text
-#        index-type: HNSW
-#        distance-type: COSINE_DISTANCE
+        protocol: STREAMABLE          # endpoint predefinito: /mcp
   threads:
     virtual:
       enabled: true
@@ -82,9 +70,6 @@ management:
         include: health, metrics
 server:
   forward-headers-strategy: framework   # usa X-Forwarded-Proto/Host: siamo dietro a nginx e Caddy
-  #tomcat:
-    #threads:
-      #max: 10
 logging:
   level:
     it.docai.rag: ${LOG_RAG:info}                       # in sviluppo: LOG_RAG=debug
@@ -94,12 +79,9 @@ logging:
 docai:
   valutazione:
     attiva: ${VALUTAZIONE_ATTIVA:false}
-    #indicizzazione:
-    #ripresa: PT1M
   prezzi:
     valuta: USD
     modelli:
       "[openai/gpt-oss-120b]": # le parentesi quadre servono per la chiave con lo "/"
         ingresso: 0.15             # dollari per milione di token
         uscita: 0.60
-
