@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 public class StrumentiRicerca {
@@ -60,15 +61,12 @@ public class StrumentiRicerca {
         Map<String, String> nomi = nomiAttuali(trovati);
         var passaggi = new ArrayList<Passaggio>();
         for (Document d : trovati) {
-            var m = d.getMetadata();
             int numero = raccolte.size() + 1;                                      // numerazione unica
-            String id = (String) m.get("documentoId");
-            String nome = nomi.getOrDefault(id, (String) m.get("nomeFile"));      // nome attuale, metadati come riserva
-            int pagina = ((Number) m.get("pagina")).intValue();
+            var p = passaggio(numero, d, nomi);
             String testo = d.getText();
-            raccolte.add(new Fonte(numero, id, nome, pagina, d.getScore(),
-                    testo.substring(0, Math.min(200, testo.length()))));
-            passaggi.add(new Passaggio(numero, nome, pagina, tronca(testo, CARATTERI_PER_PASSAGGIO)));
+            raccolte.add(new Fonte(numero, (String) d.getMetadata().get("documentoId"), p.nomeFile(), p.pagina(),
+                    d.getScore(), testo.substring(0, Math.min(200, testo.length()))));
+            passaggi.add(p);
         }
         return passaggi;
     }
@@ -76,6 +74,14 @@ public class StrumentiRicerca {
     /** Ricerca condivisa: la usano l'assistente (qui sopra) e il server MCP. */
     public List<Document> cerca(String domanda, UUID documentoId, String proprietario) {
         return ricerca.cerca(domanda, documentoId, proprietario, PASSAGGI, SOGLIA);
+    }
+
+    /** Passaggi numerati da 1, con il nome attuale dei documenti: li usa il server MCP. */
+    public List<Passaggio> passaggi(List<Document> trovati) {
+        Map<String, String> nomi = nomiAttuali(trovati);
+        return IntStream.range(0, trovati.size())
+                .mapToObj(i -> passaggio(i + 1, trovati.get(i), nomi))
+                .toList();
     }
 
     /**
@@ -92,11 +98,12 @@ public class StrumentiRicerca {
                 .collect(Collectors.toMap(doc -> doc.getId().toString(), Documento::getNomeFile));
     }
 
-    /** Il passaggio per il modello: testo troncato per restare nel budget di token (usato dal server MCP). */
-    public static Passaggio passaggio(int numero, Document d) {
+    /** Il passaggio per il modello: nome attuale (metadati come riserva) e testo troncato per il budget di token. */
+    private static Passaggio passaggio(int numero, Document d, Map<String, String> nomi) {
         var m = d.getMetadata();
-        return new Passaggio(numero, (String) m.get("nomeFile"),
-                ((Number) m.get("pagina")).intValue(), tronca(d.getText(), CARATTERI_PER_PASSAGGIO));
+        String nome = nomi.getOrDefault((String) m.get("documentoId"), (String) m.get("nomeFile"));
+        return new Passaggio(numero, nome, ((Number) m.get("pagina")).intValue(),
+                tronca(d.getText(), CARATTERI_PER_PASSAGGIO));
     }
 
     static String tronca(String testo, int massimo) {

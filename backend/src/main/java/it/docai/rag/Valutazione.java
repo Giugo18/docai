@@ -9,6 +9,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.type.TypeReference;
@@ -24,6 +25,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
+@ConditionalOnProperty(name = "docai.valutazione.attiva", havingValue = "true")   // in produzione il bean non esiste
 public class Valutazione {
 
     private static final Logger log = LoggerFactory.getLogger(Valutazione.class);
@@ -58,10 +60,26 @@ public class Valutazione {
         }
     }
 
+    /** Tutti i casi. */
     public ReportValutazione esegui(String proprietario) {
+        return esegui(proprietario, null, null);
+    }
+
+    /**
+     * Solo i casi scelti: modalita null = tutte; contiene null o vuoto = nessun filtro sul testo
+     * (cerca nell'etichetta, che comprende modalità, utente, domande precedenti e domanda).
+     */
+    public ReportValutazione esegui(String proprietario, CasoDiProva.Modalita modalita, String contiene) {
+        String testo = contiene == null ? "" : contiene.strip().toLowerCase(Locale.ITALIAN);
+        List<CasoDiProva> scelti = casi.stream()
+                .filter(c -> modalita == null || c.modalita() == modalita)
+                .filter(c -> testo.isEmpty() || c.etichetta().toLowerCase(Locale.ITALIAN).contains(testo))
+                .toList();
+        log.info("Valutazione: {} casi su {} (modalita={}, contiene='{}')", scelti.size(), casi.size(), modalita, testo);
+
         var esiti = new ArrayList<EsitoCaso>();
         tutti:
-        for (CasoDiProva caso : casi) {
+        for (CasoDiProva caso : scelti) {
             for (int giro = 1; giro <= caso.ripeti(); giro++) {
                 if (!esiti.isEmpty() && !aspetta()) {
                     break tutti;                         // thread interrotto: mi fermo con quello che ho

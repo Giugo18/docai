@@ -83,10 +83,17 @@ function InfoToken {
 }
 
 # Valutazione completa (serve VALUTAZIONE_ATTIVA=true): mostra il riepilogo e i casi falliti
-function Valuta {
-  $global:report = Api POST /api/rag/valutazione
+# Valutazione (serve VALUTAZIONE_ATTIVA=true). Tutti i casi: Valuta
+# Una parte: Valuta -modalita AGENTE   |   Valuta -contiene java   |   Valuta ASSISTENTE tokyo
+function Valuta([string]$modalita, [string]$contiene) {
+  $parametri = @()
+  if ($modalita) { $parametri += "modalita=$($modalita.ToUpper())" }
+  if ($contiene) { $parametri += "contiene=$([uri]::EscapeDataString($contiene))" }
+  $percorso = '/api/rag/valutazione' + $(if ($parametri) { '?' + ($parametri -join '&') } else { '' })
+
+  $global:report = Api POST $percorso
   if (-not $global:report) { return }
-  $global:report | Select-Object -ExcludeProperty esiti | Format-List
+  $global:report | Select-Object * -ExcludeProperty esiti | Format-List
   $falliti = $global:report.esiti | Where-Object { -not $_.rispostaCorretta -or -not $_.fonteCitata }
   if ($falliti) { $falliti | Format-List } else { Write-Host "Tutti i casi passati" -ForegroundColor Green }
 }

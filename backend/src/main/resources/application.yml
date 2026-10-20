@@ -74,6 +74,9 @@ logging:
   level:
     it.docai.rag: ${LOG_RAG:info}                       # in sviluppo: LOG_RAG=debug
     it.docai.rag.RicercaIbrida: ${LOG_RICERCA:info}     # in sviluppo: LOG_RICERCA=debug
+    # Spring AI scrive ogni errore di streaming 5 volte con lo stack trace intero;
+    # lo stesso errore lo registra già GestoreErrori in una riga, con l'id della richiesta
+    org.springframework.ai.chat.model.MessageAggregator: ${LOG_AGGREGATORE:off}
   pattern:
     level: "%5p [%X{idRichiesta:-}]"
 docai:
