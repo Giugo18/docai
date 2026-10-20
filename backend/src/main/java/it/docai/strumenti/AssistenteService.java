@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class AssistenteService {
     private final StrumentiModifica strumentiModifica;
     private static final int MESSAGGI_STORIA = 4;
     private static final int CARATTERI_RISPOSTA_STORIA = 600;
+    private static final double TEMPERATURA = 0.2;     // bassa: a parità di passaggi, risposte più costanti
 
     public AssistenteService(ChatClient chatClient, StrumentiDocumenti strumentiDocumenti,
                              @Value("classpath:prompts/strumenti.st") Resource prompt,
@@ -59,6 +61,7 @@ public class AssistenteService {
                     .system(regole)
                     .messages(storia)                                   // vuota = domanda singola
                     .user(domanda)
+                    .options(ChatOptions.builder().temperature(TEMPERATURA))
                     .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
                     .toolContext(contesto)
                     .call()
@@ -83,6 +86,7 @@ public class AssistenteService {
                 .system(regole)
                 .messages(cronologia(storia))                                      // la conversazione finora
                 .user(domanda)
+                .options(ChatOptions.builder().temperature(TEMPERATURA))
                 .tools(strumentiDocumenti, strumentiRicerca, strumentiModifica)
                 .toolContext(contesto)
                 .stream()
