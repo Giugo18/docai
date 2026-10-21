@@ -32,3 +32,13 @@ auth.{$DOMINIO} {
 
 	reverse_proxy keycloak:8080
 }
+
+# torneopro18: un'altra app sullo stesso server, con i suoi container (repo Giugo18/torneopro18, deploy/).
+# Caddy la raggiunge solo dalla rete torneopro-proxy, dove c'è soltanto il suo frontend: torneopro18 non vede
+# i servizi di docai (Postgres, Keycloak, Ollama) e docai non vede i suoi.
+# CSP e noindex li manda l'nginx di torneopro18; qui gli header comuni e l'HTTPS.
+torneopro.mendoza18surco.it {
+	import sicurezza
+	encode zstd gzip
+	reverse_proxy torneopro-frontend:8080
+}

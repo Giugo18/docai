@@ -16,6 +16,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # default: i servizi di docai; torneopro: solo il frontend di torneopro18 (vedi caddy/Caddyfile)
+    networks:
+      - default
+      - torneopro
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data          # certificati: se si perdono, Caddy li richiede di nuovo
@@ -62,6 +66,11 @@ services:
     image: ghcr.io/giugo18/docai-frontend:${VERSIONE:-latest}
     ports: !reset []
     restart: unless-stopped
+
+# Rete condivisa con torneopro18: la crea docai, il compose di torneopro18 la usa come esterna
+networks:
+  torneopro:
+    name: torneopro-proxy
 
 volumes:
   caddy_data:
