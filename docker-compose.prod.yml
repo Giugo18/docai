@@ -16,10 +16,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    # default: i servizi di docai; torneopro: solo il frontend di torneopro18 (vedi caddy/Caddyfile)
+    # default: i servizi di docai; torneopro: solo il frontend di torneopro18; evelin: solo l'nginx di test-evelin (vedi caddy/Caddyfile)
     networks:
       - default
       - torneopro
+      - evelin
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data          # certificati: se si perdono, Caddy li richiede di nuovo
@@ -67,10 +68,12 @@ services:
     ports: !reset []
     restart: unless-stopped
 
-# Rete condivisa con torneopro18: la crea docai, il compose di torneopro18 la usa come esterna
+# Reti condivise con torneopro18 e test-evelin: le crea docai, i loro compose le usano come esterne
 networks:
   torneopro:
     name: torneopro-proxy
+  evelin:
+    name: evelin-proxy
 
 volumes:
   caddy_data:

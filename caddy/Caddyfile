@@ -42,3 +42,12 @@ torneopro.mendoza18surco.it {
 	encode zstd gzip
 	reverse_proxy torneopro-frontend:8080
 }
+
+# test-evelin: WordPress di prova (repo Giugo18/test_evelin, deploy/), staging privato.
+# Caddy la raggiunge solo dalla rete evelin-proxy, dove c'è soltanto il suo nginx.
+# Password (basic auth) e noindex li gestisce l'nginx di test-evelin; qui gli header comuni e l'HTTPS.
+test-evelin.mendoza18surco.it {
+	import sicurezza
+	encode zstd gzip
+	reverse_proxy evelin-nginx:8080
+}
